@@ -1,5 +1,9 @@
 package mandelbrot.maths;
 
+import java.awt.Point;
+
+import utilities.Pair;
+
 public final class Maths
 {
 
@@ -7,15 +11,34 @@ public final class Maths
 	{
 		// TODO Auto-generated constructor stub
 	}
-	
+
+
 	public static double fastSquare(double number)
 	{
 		return number * number;
 	}
-	
+
+
 	public static int fastSquare(int number)
 	{
 		return number * number;
+	}
+
+
+	public static Pair<Double, Double> calculateRealtoComplexRatio(int width, int height, Pair<Double, Double> xAxisComplex,
+			Pair<Double, Double> yAxisComplex)
+	{
+		double xRatio = width / ((xAxisComplex.getRight()) - (xAxisComplex.getLeft()));
+		double yRatio = height / ((yAxisComplex.getRight()) - (yAxisComplex.getLeft()));
+		return new Pair<Double, Double>(xRatio, yRatio);
+	}
+
+
+	public static Pair<Double, Double> convertCoordinateToComplexPlane(Point coordinate, Pair<Double, Double> conversionRatio)
+	{
+		double x = coordinate.getX() * conversionRatio.getLeft();
+		double y = coordinate.getY() * conversionRatio.getRight();
+		return new Pair<Double, Double>(x, y);
 	}
 
 }
