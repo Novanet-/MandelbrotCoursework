@@ -24,9 +24,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import mandelbrot.maths.ComplexNumber;
 import mandelbrot.maths.Maths;
 import utilities.Pair;
-
 
 public class GUI extends JFrame
 {
@@ -41,19 +41,12 @@ public class GUI extends JFrame
 	private MandelbrotPanel pnlMandelbrot;
 	private InfoPanel pnlInfo;
 
-	/*
-	 * private JFormattedTextField txtRealLower, txtImaginaryLower; private JFormattedTextField txtRealUpper,
-	 * txtImaginaryUpper; private JButton btnChangePair; private JLabel lblRealBounds; private JLabel
-	 * lblImaginaryBounds; private JLabel lblIterations; private JFormattedTextField txtIterations; private JButton
-	 * btnSubmitIterations;
-	 */
-
 	private Pair<Double, Double> xAxisComplex;
 	private Pair<Double, Double> yAxisComplex;
 	private int iterations;
-	
+
 	private Pair<Double, Double> conversionRatio;
-	
+
 	private static final long serialVersionUID = -9167797785983558030L;
 
 
@@ -85,8 +78,6 @@ public class GUI extends JFrame
 
 		pnlMandelbrot.init();
 		pnlInfo.init();
-		
-		setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex));
 
 		setSize(defaultFrameWidth, defaultFrameHeight);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -148,9 +139,9 @@ public class GUI extends JFrame
 		Point clickLocation;
 		BufferedImage mandelbrotImage;
 		Pair<Double, Double> conversionRatio;
-		
+
 		int paintType;
-		
+
 		private static final long serialVersionUID = 1900295689838487856L;
 
 
@@ -166,6 +157,7 @@ public class GUI extends JFrame
 		{
 			pnlMandelbrot.setBackground(Color.GRAY);
 			pnlMandelbrot.setPreferredSize(new Dimension(defaultFrameWidth, (int) (defaultFrameHeight * 0.875)));
+			setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex));
 			pnlOuter.add(pnlMandelbrot);
 		}
 
@@ -178,16 +170,19 @@ public class GUI extends JFrame
 
 			super.paintComponent(g2);
 
+			conversionRatio = Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex);
 			paintMandelbrotSet();
-			g2.drawImage(mandelbrotImage, 0, 0 ,null);
-			
+			g2.drawImage(mandelbrotImage, 0, 0, null);
+
 		}
-		
+
+
 		public void paintMandelbrotSet()
 		{
 			int width = getWidth();
 			int height = getHeight();
 			int color;
+			ComplexNumber complexCoordinate;
 			Random random = new Random();
 			
 			int paintType = BufferedImage.TYPE_INT_ARGB;
@@ -196,7 +191,21 @@ public class GUI extends JFrame
 
 			for(int x = 0; x < width; x++) {
 			    for(int y = 0; y < height; y++) {
-			    	color = new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256)).getRGB();
+			    	complexCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), conversionRatio, getWidth(), getHeight(), xAxisComplex, yAxisComplex);
+			    	color = Color.BLACK.getRGB();
+			    	ComplexNumber z = complexCoordinate;
+			    	for (int i = 0; i < getIterations(); i++)
+			    	{
+			    		z = (z.square()).add(complexCoordinate);
+			    		if (Math.sqrt(z.modulusSquared()) >= 2)
+			    		{
+			    			//color = new Color( (255 * i % 100) / 100, (175 * (100 - i % 100)) / 100, (255 * (100 - i % 100)) / 100).getRGB();
+			    			int test = (int) Math.round(255 - (255/2 * Math.abs(Math.sin(i/getIterations() * 2 * Math.PI))));
+			    			color = new Color(0, test, test).getRGB();
+			    			break;
+			    		}
+			    	}
+			    	//color = new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256)).getRGB();
 			        mandelbrotImage.setRGB(x, y, color);
 			    }
 			}
@@ -211,8 +220,8 @@ public class GUI extends JFrame
 			System.out.println("Click");
 
 			clickLocation = new Point(e.getX(), e.getY());
-			
-			//repaint();
+
+			// repaint();
 
 		}
 
@@ -383,7 +392,8 @@ public class GUI extends JFrame
 			if (e.getSource() == btnChangeAxis)
 			{
 				setXAxisComplex(new Pair<Double, Double>(Double.parseDouble(txtRealLower.getText()), Double.parseDouble(txtRealUpper.getText())));
-				setYAxisComplex(new Pair<Double, Double>(Double.parseDouble(txtImaginaryLower.getText()), Double.parseDouble(txtImaginaryUpper.getText())));
+				setYAxisComplex(new Pair<Double, Double>(Double.parseDouble(txtImaginaryLower.getText()), Double.parseDouble(txtImaginaryUpper
+						.getText())));
 			} else if (e.getSource() == btnSubmitIterations)
 			{
 				setIterations(Integer.parseInt(txtIterations.getText()));
