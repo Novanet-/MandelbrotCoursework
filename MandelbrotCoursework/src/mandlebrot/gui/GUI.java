@@ -36,6 +36,7 @@ public class GUI extends JFrame
 	private final static Pair<Double, Double> defaultXAxisComplex = new Pair<Double, Double>(-2.0, 2.0);
 	private final static Pair<Double, Double> defaultYAxisComplex = new Pair<Double, Double>(-1.6, 1.6);
 	private final static int defaultIterations = 100;
+	private final int paintType = BufferedImage.TYPE_INT_ARGB;
 
 	private JPanel pnlOuter;
 	private MandelbrotPanel pnlMandelbrot;
@@ -157,6 +158,7 @@ public class GUI extends JFrame
 		{
 			pnlMandelbrot.setBackground(Color.GRAY);
 			pnlMandelbrot.setPreferredSize(new Dimension(defaultFrameWidth, (int) (defaultFrameHeight * 0.875)));
+			mandelbrotImage = new BufferedImage(defaultFrameWidth, defaultFrameHeight, paintType);
 			setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex));
 			pnlOuter.add(pnlMandelbrot);
 		}
@@ -183,31 +185,30 @@ public class GUI extends JFrame
 			int height = getHeight();
 			int color;
 			ComplexNumber complexCoordinate;
-			Random random = new Random();
-			
-			int paintType = BufferedImage.TYPE_INT_ARGB;
 
-			mandelbrotImage = new BufferedImage(width, height, paintType);
-
-			for(int x = 0; x < width; x++) {
-			    for(int y = 0; y < height; y++) {
-			    	complexCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), conversionRatio, getWidth(), getHeight(), xAxisComplex, yAxisComplex);
-			    	color = Color.BLACK.getRGB();
-			    	ComplexNumber z = complexCoordinate;
-			    	for (int i = 0; i < getIterations(); i++)
-			    	{
-			    		z = (z.square()).add(complexCoordinate);
-			    		if (Math.sqrt(z.modulusSquared()) >= 2)
-			    		{
-			    			//color = new Color( (255 * i % 100) / 100, (175 * (100 - i % 100)) / 100, (255 * (100 - i % 100)) / 100).getRGB();
-			    			int test = (int) Math.round(255 - (255/2 * Math.abs(Math.sin(i/getIterations() * 2 * Math.PI))));
-			    			color = new Color(0, test, test).getRGB();
-			    			break;
-			    		}
-			    	}
-			    	//color = new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256)).getRGB();
-			        mandelbrotImage.setRGB(x, y, color);
-			    }
+			for (int x = 0; x < width; x++)
+			{
+				for (int y = 0; y < height; y++)
+				{
+					complexCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), conversionRatio, getWidth(), getHeight(),
+							xAxisComplex, yAxisComplex);
+					color = Color.BLACK.getRGB();
+					ComplexNumber z = complexCoordinate;
+					for (int i = 0; i < getIterations(); i++)
+					{
+						z = (z.square()).add(complexCoordinate);
+						if (Math.sqrt(z.modulusSquared()) >= 2)
+						{
+							// color = new Color( (255 * i % 100) / 100, (175 * (100 - i % 100)) / 100, (255 * (100 - i
+							// % 100)) / 100).getRGB();
+							int test = (int) Math.round(255 - (255 / 2 * Math.abs(Math.sin(i / getIterations() * 2 * Math.PI))));
+							color = new Color(0, test, test).getRGB();
+							break;
+						}
+					}
+					// color = new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256)).getRGB();
+					mandelbrotImage.setRGB(x, y, color);
+				}
 			}
 
 		}
