@@ -173,6 +173,7 @@ public class GUI extends JFrame
 			super.paintComponent(g2);
 
 			conversionRatio = Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex);
+			mandelbrotImage = new BufferedImage(getWidth(), getHeight(), paintType);
 			paintMandelbrotSet();
 			g2.drawImage(mandelbrotImage, 0, 0, null);
 
@@ -183,7 +184,8 @@ public class GUI extends JFrame
 		{
 			int width = getWidth();
 			int height = getHeight();
-			int color;
+			int i;
+			Color color;
 			ComplexNumber complexCoordinate;
 
 			for (int x = 0; x < width; x++)
@@ -192,22 +194,18 @@ public class GUI extends JFrame
 				{
 					complexCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), conversionRatio, getWidth(), getHeight(),
 							xAxisComplex, yAxisComplex);
-					color = Color.BLACK.getRGB();
+					color = Color.BLACK;
 					ComplexNumber z = complexCoordinate;
-					for (int i = 0; i < getIterations(); i++)
+					for (i = 0; i < getIterations(); i++)
 					{
 						z = (z.square()).add(complexCoordinate);
 						if (Math.sqrt(z.modulusSquared()) >= 2)
 						{
-							// color = new Color( (255 * i % 100) / 100, (175 * (100 - i % 100)) / 100, (255 * (100 - i
-							// % 100)) / 100).getRGB();
-							int test = (int) Math.round(255 - (255 / 2 * Math.abs(Math.sin(i / getIterations() * 2 * Math.PI))));
-							color = new Color(0, test, test).getRGB();
+							color = new Color(i + i/6,i +i/4,i + i/2 + 30);
 							break;
 						}
 					}
-					// color = new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256)).getRGB();
-					mandelbrotImage.setRGB(x, y, color);
+					mandelbrotImage.setRGB(x, y, color.getRGB());
 				}
 			}
 
