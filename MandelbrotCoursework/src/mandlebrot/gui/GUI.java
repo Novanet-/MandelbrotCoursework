@@ -2,11 +2,14 @@ package mandlebrot.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
@@ -14,6 +17,7 @@ import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
+import java.text.DecimalFormat;
 import java.util.Random;
 
 import javax.swing.Box;
@@ -31,15 +35,17 @@ import utilities.Pair;
 public class GUI extends JFrame
 {
 
-	private final static int defaultFrameWidth = 1000;
-	private final static int defaultFrameHeight = 800;
+	private final static int defaultFrameWidth = (int) (Toolkit.getDefaultToolkit().getScreenSize().width * 0.95);
+	private final static int defaultFrameHeight = (int) (Toolkit.getDefaultToolkit().getScreenSize().height * 0.70);
 	private final static Pair<Double, Double> defaultXAxisComplex = new Pair<Double, Double>(-2.0, 2.0);
 	private final static Pair<Double, Double> defaultYAxisComplex = new Pair<Double, Double>(-1.6, 1.6);
 	private final static int defaultIterations = 100;
 	private final int paintType = BufferedImage.TYPE_INT_ARGB;
 
 	private JPanel pnlOuter;
+	private JPanel pnlFractal;
 	private MandelbrotPanel pnlMandelbrot;
+	private JuliaPanel pnlJulia;
 	private InfoPanel pnlInfo;
 
 	private Pair<Double, Double> xAxisComplex;
@@ -49,7 +55,6 @@ public class GUI extends JFrame
 	private Pair<Double, Double> conversionRatio;
 
 	private static final long serialVersionUID = -9167797785983558030L;
-
 
 	public static void main(String[] args)
 	{
@@ -64,20 +69,26 @@ public class GUI extends JFrame
 		frame.init();
 	}
 
-
 	public void init()
 	{
 		setTitle("Mandelbrot Visualiser");
 
 		pnlOuter = new JPanel();
+		pnlFractal = new JPanel();
+		pnlFractal.setLayout(new BoxLayout(pnlFractal, BoxLayout.LINE_AXIS));
 		pnlMandelbrot = new MandelbrotPanel();
+		pnlJulia = new JuliaPanel();
 		pnlInfo = new InfoPanel();
 
-		pnlOuter.setSize(defaultFrameWidth, defaultFrameHeight);
+		pnlFractal.setSize(new Dimension(defaultFrameWidth, (int) (defaultFrameHeight * 0.875)));
+
+		pnlOuter.setPreferredSize(new Dimension(defaultFrameWidth, defaultFrameHeight));
 		setContentPane(pnlOuter);
 		pnlOuter.setLayout(new BoxLayout(pnlOuter, BoxLayout.PAGE_AXIS));
 
+		pnlOuter.add(pnlFractal);
 		pnlMandelbrot.init();
+		pnlJulia.init();
 		pnlInfo.init();
 
 		setSize(defaultFrameWidth, defaultFrameHeight);
@@ -85,54 +96,45 @@ public class GUI extends JFrame
 		setVisible(true);
 	}
 
-
 	public Pair<Double, Double> getXPairComplex()
 	{
 		return xAxisComplex;
 	}
-
 
 	public Pair<Double, Double> getYPairComplex()
 	{
 		return yAxisComplex;
 	}
 
-
 	public int getIterations()
 	{
 		return iterations;
 	}
-
 
 	public void setXAxisComplex(Pair<Double, Double> xPairComplex)
 	{
 		this.xAxisComplex = xPairComplex;
 	}
 
-
 	public void setYAxisComplex(Pair<Double, Double> yPairComplex)
 	{
 		this.yAxisComplex = yPairComplex;
 	}
-
 
 	public void setIterations(int iterations)
 	{
 		this.iterations = iterations;
 	}
 
-
 	public Pair<Double, Double> getConversionRatio()
 	{
 		return conversionRatio;
 	}
 
-
 	public void setConversionRatio(Pair<Double, Double> conversionRatio)
 	{
 		this.conversionRatio = conversionRatio;
 	}
-
 
 	class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 	{
@@ -145,7 +147,6 @@ public class GUI extends JFrame
 
 		private static final long serialVersionUID = 1900295689838487856L;
 
-
 		public MandelbrotPanel()
 		{
 			super();
@@ -153,16 +154,16 @@ public class GUI extends JFrame
 			this.addMouseListener(this);
 		}
 
-
 		public void init()
 		{
 			pnlMandelbrot.setBackground(Color.GRAY);
-			pnlMandelbrot.setPreferredSize(new Dimension(defaultFrameWidth, (int) (defaultFrameHeight * 0.875)));
-			mandelbrotImage = new BufferedImage(defaultFrameWidth, defaultFrameHeight, paintType);
+			pnlMandelbrot.setPreferredSize(new Dimension((int) (pnlFractal.getWidth() * (0.6)), (int) (pnlFractal
+					.getHeight())));
+			mandelbrotImage = new BufferedImage((int) (pnlFractal.getWidth() * (0.6)), pnlFractal.getHeight(),
+					paintType);
 			setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex));
-			pnlOuter.add(pnlMandelbrot);
+			pnlFractal.add(pnlMandelbrot);
 		}
-
 
 		public void paintComponent(Graphics g)
 		{
@@ -179,7 +180,6 @@ public class GUI extends JFrame
 
 		}
 
-
 		public void paintMandelbrotSet()
 		{
 			int width = getWidth();
@@ -192,8 +192,8 @@ public class GUI extends JFrame
 			{
 				for (int y = 0; y < height; y++)
 				{
-					complexCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), conversionRatio, getWidth(), getHeight(),
-							xAxisComplex, yAxisComplex);
+					complexCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), conversionRatio,
+							getWidth(), getHeight(), xAxisComplex, yAxisComplex);
 					color = Color.BLACK;
 					ComplexNumber z = complexCoordinate;
 					for (i = 0; i < getIterations(); i++)
@@ -201,7 +201,12 @@ public class GUI extends JFrame
 						z = (z.square()).add(complexCoordinate);
 						if (Math.sqrt(z.modulusSquared()) >= 2)
 						{
-							color = new Color(i + i/6,i +i/4,i + i/2 + 30);
+							// color = new Color((i + i / 6) % 255, (i + i / 4) % 255, (i + i / 2 +
+							// 50) % 255);
+							float nsmooth = (float) Math.abs(i + 1 - Math.log(Math.log(z.modulusSquared()))/ Math.log(2));
+							nsmooth = nsmooth / getIterations();
+							color = new Color((float) (1 - nsmooth * 0.9), (float) (1 - nsmooth * 0.9),
+									(float) (1 - nsmooth * 0.5));
 							break;
 						}
 					}
@@ -211,55 +216,63 @@ public class GUI extends JFrame
 
 		}
 
-
 		@Override
 		public void mouseClicked(MouseEvent e)
 		{
-
 			System.out.println("Click");
 
 			clickLocation = new Point(e.getX(), e.getY());
+			ComplexNumber complexCoordinate = Maths.convertCoordinateToComplexPlane(clickLocation, conversionRatio,
+					getWidth(), getHeight(), xAxisComplex, yAxisComplex);
+			DecimalFormat df = new DecimalFormat("#.##");
+
+			String connector;
+
+			if (complexCoordinate.getImaginary() < 0)
+			{
+				connector = " - ";
+				complexCoordinate.setImaginary(Math.abs(complexCoordinate.getImaginary()));
+			} else
+				connector = " + ";
+			pnlInfo.getLblSelectedComplexPoint().setText(
+					(("Selected point: " + "z = " + df.format(complexCoordinate.getReal()) + connector
+							+ df.format(complexCoordinate.getImaginary()) + "i")));
+
+			pnlJulia.paintComponent(Graphics g);
 
 			// repaint();
 
 		}
-
 
 		@Override
 		public void mousePressed(MouseEvent e)
 		{
 		}
 
-
 		@Override
 		public void mouseReleased(MouseEvent e)
 		{
 		}
-
 
 		@Override
 		public void mouseEntered(MouseEvent e)
 		{
 		}
 
-
 		@Override
 		public void mouseExited(MouseEvent e)
 		{
 		}
-
 
 		@Override
 		public void componentHidden(ComponentEvent arg0)
 		{
 		}
 
-
 		@Override
 		public void componentMoved(ComponentEvent e)
 		{
 		}
-
 
 		@Override
 		public void componentResized(ComponentEvent e)
@@ -267,6 +280,153 @@ public class GUI extends JFrame
 			Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex);
 		}
 
+		@Override
+		public void componentShown(ComponentEvent e)
+		{
+		}
+
+	}
+
+	class JuliaPanel extends JPanel implements MouseListener, ComponentListener
+	{
+
+		Point clickLocation;
+		BufferedImage juliaImage;
+		Pair<Double, Double> conversionRatio;
+
+		int paintType;
+
+		private static final long serialVersionUID = 1900295689838487856L;
+
+		public JuliaPanel()
+		{
+			super();
+			paintType = BufferedImage.TYPE_INT_ARGB;
+			this.addMouseListener(this);
+		}
+
+		public void init()
+		{
+			pnlJulia.setBackground(Color.GRAY);
+			pnlJulia.setPreferredSize(new Dimension((int) (pnlFractal.getWidth() * (0.4)), (int) (pnlFractal
+					.getHeight())));
+			juliaImage = new BufferedImage((int) (pnlFractal.getWidth() * (0.4)), pnlFractal.getHeight(), paintType);
+			setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex));
+			pnlFractal.add(pnlJulia);
+		}
+
+		public void paintComponent(Graphics g, ComplexNumber complexCoordinate)
+		{
+			Graphics2D g2 = (Graphics2D) g;
+
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+			super.paintComponent(g2);
+
+			if (complexCoordinate != null)
+			{
+				conversionRatio = Maths
+						.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex);
+				juliaImage = new BufferedImage(getWidth(), getHeight(), paintType);
+				paintJuliaSet(complexCoordinate);
+				g2.drawImage(juliaImage, 0, 0, null);
+			}
+
+		}
+		
+		public void repaint(Graphics g, ComplexNumber complexCoordinate)
+		{
+			super.repaint();
+			
+			paintComponent(g, complexCoordinate);
+		}
+
+		public void paintJuliaSet(ComplexNumber complexCoordinate)
+		{
+			int width = getWidth();
+			int height = getHeight();
+			int i;
+			Color color;
+			ComplexNumber iteratingCoordinate;
+
+			for (int x = 0; x < width; x++)
+			{
+				for (int y = 0; y < height; y++)
+				{
+					iteratingCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), conversionRatio,
+							getWidth(), getHeight(), xAxisComplex, yAxisComplex);
+					color = Color.BLACK;
+					ComplexNumber z = iteratingCoordinate;
+					for (i = 0; i < getIterations(); i++)
+					{
+						z = (z.square()).add(complexCoordinate);
+						if (Math.sqrt(z.modulusSquared()) >= 2)
+						{
+							// color = new Color((i + i / 6) % 255, (i + i / 4) % 255, (i + i / 2 +
+							// 50) % 255);
+							float nsmooth = (float) Math.abs(i + 1 - Math.log(Math.log(z.modulusSquared()))
+									/ Math.log(2));
+							nsmooth = nsmooth / getIterations();
+							color = new Color((float) (1 - nsmooth * 0.9), (float) (1 - nsmooth * 0.9),
+									(float) (1 - nsmooth * 0.5));
+							break;
+						}
+					}
+					juliaImage.setRGB(x, y, color.getRGB());
+				}
+			}
+
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e)
+		{
+
+			/*System.out.println("Click");
+
+			clickLocation = new Point(e.getX(), e.getY());
+			ComplexNumber complexCoordinate = Maths.convertCoordinateToComplexPlane(clickLocation, conversionRatio,
+					getWidth(), getHeight(), xAxisComplex, yAxisComplex);
+
+			repaint();*/
+
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e)
+		{
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e)
+		{
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e)
+		{
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e)
+		{
+		}
+
+		@Override
+		public void componentHidden(ComponentEvent arg0)
+		{
+		}
+
+		@Override
+		public void componentMoved(ComponentEvent e)
+		{
+		}
+
+		@Override
+		public void componentResized(ComponentEvent e)
+		{
+			Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex);
+		}
 
 		@Override
 		public void componentShown(ComponentEvent e)
@@ -288,13 +448,12 @@ public class GUI extends JFrame
 		private JLabel lblIterations;
 		private JFormattedTextField txtIterations;
 		private JButton btnSubmitIterations;
-
+		private JLabel lblSelectedComplexPoint;
 
 		public InfoPanel()
 		{
 			super();
 		}
-
 
 		public void init()
 		{
@@ -303,15 +462,17 @@ public class GUI extends JFrame
 			lblRealBounds = new JLabel("Real Pair (x):     ");
 			lblImaginaryBounds = new JLabel("Imaginary Pair (y):     ");
 			lblIterations = new JLabel("Iterations:     ");
+			lblSelectedComplexPoint = new JLabel("Selected point: ");
 
 			/*
-			 * try { txtRealLower = new JFormattedTextField(new MaskFormatter("##.##")); txtImaginaryLower = new
-			 * JFormattedTextField(new MaskFormatter("##.##")); txtRealUpper = new JFormattedTextField(new
-			 * MaskFormatter("##.##")); txtImaginaryUpper = new JFormattedTextField(new MaskFormatter("##.##"));
+			 * try { txtRealLower = new JFormattedTextField(new MaskFormatter("##.##"));
+			 * txtImaginaryLower = new JFormattedTextField(new MaskFormatter("##.##")); txtRealUpper
+			 * = new JFormattedTextField(new MaskFormatter("##.##")); txtImaginaryUpper = new
+			 * JFormattedTextField(new MaskFormatter("##.##"));
 			 * 
 			 * txtRealLower.setValue(new Double(-2)); txtImaginaryLower.setValue(new Double(-1.6));
-			 * txtRealUpper.setValue(new Double(2)); txtImaginaryUpper.setValue(new Double(1.6)); } catch
-			 * (ParseException e) { System.err.println(e.getMessage()); e.printStackTrace(); }
+			 * txtRealUpper.setValue(new Double(2)); txtImaginaryUpper.setValue(new Double(1.6)); }
+			 * catch (ParseException e) { System.err.println(e.getMessage()); e.printStackTrace(); }
 			 */
 
 			txtRealLower = new JFormattedTextField(new Double(defaultXAxisComplex.getLeft()));
@@ -364,12 +525,13 @@ public class GUI extends JFrame
 			pnlInfo.add(Box.createHorizontalGlue());
 			pnlInfo.add(btnSubmitIterations);
 			pnlInfo.add(Box.createHorizontalGlue());
+			pnlInfo.add(lblSelectedComplexPoint);
+			pnlInfo.add(Box.createHorizontalGlue());
 
 			btnChangeAxis.addActionListener(this);
 			btnSubmitIterations.addActionListener(this);
 			pnlOuter.add(pnlInfo);
 		}
-
 
 		@Override
 		public void paintComponent(Graphics g)
@@ -384,20 +546,32 @@ public class GUI extends JFrame
 			int height = this.getHeight();
 		}
 
-
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
 			if (e.getSource() == btnChangeAxis)
 			{
-				setXAxisComplex(new Pair<Double, Double>(Double.parseDouble(txtRealLower.getText()), Double.parseDouble(txtRealUpper.getText())));
-				setYAxisComplex(new Pair<Double, Double>(Double.parseDouble(txtImaginaryLower.getText()), Double.parseDouble(txtImaginaryUpper
-						.getText())));
+				setXAxisComplex(new Pair<Double, Double>(Double.parseDouble(txtRealLower.getText()),
+						Double.parseDouble(txtRealUpper.getText())));
+				setYAxisComplex(new Pair<Double, Double>(Double.parseDouble(txtImaginaryLower.getText()),
+						Double.parseDouble(txtImaginaryUpper.getText())));
 			} else if (e.getSource() == btnSubmitIterations)
 			{
 				setIterations(Integer.parseInt(txtIterations.getText()));
 			}
+			pnlMandelbrot.repaint();
 		}
+
+		public JLabel getLblSelectedComplexPoint()
+		{
+			return lblSelectedComplexPoint;
+		}
+
+		public void setLblSelectedComplexPoint(JLabel lblSelectedComplexPoint)
+		{
+			this.lblSelectedComplexPoint = lblSelectedComplexPoint;
+		}
+
 	}
 
 }
