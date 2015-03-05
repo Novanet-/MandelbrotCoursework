@@ -16,6 +16,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.util.Random;
@@ -51,6 +52,7 @@ public class GUI extends JFrame
 	private Pair<Double, Double> xAxisComplex;
 	private Pair<Double, Double> yAxisComplex;
 	private int iterations;
+	private ComplexNumber complexCoordinate;
 
 	private Pair<Double, Double> conversionRatio;
 
@@ -110,6 +112,12 @@ public class GUI extends JFrame
 	{
 		return iterations;
 	}
+	
+
+	public ComplexNumber getComplexCoordinate()
+	{
+		return complexCoordinate;
+	}
 
 	public void setXAxisComplex(Pair<Double, Double> xPairComplex)
 	{
@@ -136,7 +144,7 @@ public class GUI extends JFrame
 		this.conversionRatio = conversionRatio;
 	}
 
-	class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
+	class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener, MouseMotionListener
 	{
 
 		Point clickLocation;
@@ -152,6 +160,7 @@ public class GUI extends JFrame
 			super();
 			paintType = BufferedImage.TYPE_INT_ARGB;
 			this.addMouseListener(this);
+			this.addMouseMotionListener(this);
 		}
 
 		public void init()
@@ -185,7 +194,7 @@ public class GUI extends JFrame
 			int width = getWidth();
 			int height = getHeight();
 			int i;
-			Color color;
+			int color;
 			ComplexNumber complexCoordinate;
 
 			for (int x = 0; x < width; x++)
@@ -194,7 +203,7 @@ public class GUI extends JFrame
 				{
 					complexCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), conversionRatio,
 							getWidth(), getHeight(), xAxisComplex, yAxisComplex);
-					color = Color.BLACK;
+					color = Color.BLACK.getRGB();
 					ComplexNumber z = complexCoordinate;
 					for (i = 0; i < getIterations(); i++)
 					{
@@ -205,12 +214,13 @@ public class GUI extends JFrame
 							// 50) % 255);
 							float nsmooth = (float) Math.abs(i + 1 - Math.log(Math.log(z.modulusSquared()))/ Math.log(2));
 							nsmooth = nsmooth / getIterations();
-							color = new Color((float) (1 - nsmooth * 0.9), (float) (1 - nsmooth * 0.9),
-									(float) (1 - nsmooth * 0.5));
+							//color = new Color((float) (1 - nsmooth * 0.9), (float) (1 - nsmooth * 0.9),
+									//(float) (1 - nsmooth * 0.5));
+							color = Color.HSBtoRGB(0.95f + 10 * nsmooth ,0.6f,1.0f);
 							break;
 						}
 					}
-					mandelbrotImage.setRGB(x, y, color.getRGB());
+					mandelbrotImage.setRGB(x, y, color);
 				}
 			}
 
@@ -222,7 +232,7 @@ public class GUI extends JFrame
 			System.out.println("Click");
 
 			clickLocation = new Point(e.getX(), e.getY());
-			ComplexNumber complexCoordinate = Maths.convertCoordinateToComplexPlane(clickLocation, conversionRatio,
+			complexCoordinate = Maths.convertCoordinateToComplexPlane(clickLocation, conversionRatio,
 					getWidth(), getHeight(), xAxisComplex, yAxisComplex);
 			DecimalFormat df = new DecimalFormat("#.##");
 
@@ -238,10 +248,7 @@ public class GUI extends JFrame
 					(("Selected point: " + "z = " + df.format(complexCoordinate.getReal()) + connector
 							+ df.format(complexCoordinate.getImaginary()) + "i")));
 
-			pnlJulia.paintComponent(Graphics g);
-
-			// repaint();
-
+			pnlJulia.repaint();
 		}
 
 		@Override
@@ -285,6 +292,38 @@ public class GUI extends JFrame
 		{
 		}
 
+		@Override
+		public void mouseDragged(MouseEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseMoved(MouseEvent e)
+		{
+			System.out.println("Drag");
+
+			clickLocation = new Point(e.getX(), e.getY());
+			complexCoordinate = Maths.convertCoordinateToComplexPlane(clickLocation, conversionRatio,
+					getWidth(), getHeight(), xAxisComplex, yAxisComplex);
+			DecimalFormat df = new DecimalFormat("#.##");
+
+			String connector;
+
+			if (complexCoordinate.getImaginary() < 0)
+			{
+				connector = " - ";
+				complexCoordinate.setImaginary(Math.abs(complexCoordinate.getImaginary()));
+			} else
+				connector = " + ";
+			pnlInfo.getLblSelectedComplexPoint().setText(
+					(("Selected point: " + "z = " + df.format(complexCoordinate.getReal()) + connector
+							+ df.format(complexCoordinate.getImaginary()) + "i")));
+
+			pnlJulia.repaint();			
+		}
+
 	}
 
 	class JuliaPanel extends JPanel implements MouseListener, ComponentListener
@@ -315,7 +354,7 @@ public class GUI extends JFrame
 			pnlFractal.add(pnlJulia);
 		}
 
-		public void paintComponent(Graphics g, ComplexNumber complexCoordinate)
+		public void paintComponent(Graphics g)
 		{
 			Graphics2D g2 = (Graphics2D) g;
 
@@ -328,20 +367,13 @@ public class GUI extends JFrame
 				conversionRatio = Maths
 						.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex);
 				juliaImage = new BufferedImage(getWidth(), getHeight(), paintType);
-				paintJuliaSet(complexCoordinate);
+				paintJuliaSet();
 				g2.drawImage(juliaImage, 0, 0, null);
 			}
 
 		}
-		
-		public void repaint(Graphics g, ComplexNumber complexCoordinate)
-		{
-			super.repaint();
-			
-			paintComponent(g, complexCoordinate);
-		}
 
-		public void paintJuliaSet(ComplexNumber complexCoordinate)
+		public void paintJuliaSet()
 		{
 			int width = getWidth();
 			int height = getHeight();
@@ -355,26 +387,92 @@ public class GUI extends JFrame
 				{
 					iteratingCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), conversionRatio,
 							getWidth(), getHeight(), xAxisComplex, yAxisComplex);
-					color = Color.BLACK;
 					ComplexNumber z = iteratingCoordinate;
+					double smoothColor = Math.exp(-z.modulusSquared());
 					for (i = 0; i < getIterations(); i++)
 					{
 						z = (z.square()).add(complexCoordinate);
+						smoothColor += Math.exp(-z.modulusSquared());
 						if (Math.sqrt(z.modulusSquared()) >= 2)
 						{
-							// color = new Color((i + i / 6) % 255, (i + i / 4) % 255, (i + i / 2 +
+							/*// color = new Color((i + i / 6) % 255, (i + i / 4) % 255, (i + i / 2 +
 							// 50) % 255);
 							float nsmooth = (float) Math.abs(i + 1 - Math.log(Math.log(z.modulusSquared()))
 									/ Math.log(2));
 							nsmooth = nsmooth / getIterations();
 							color = new Color((float) (1 - nsmooth * 0.9), (float) (1 - nsmooth * 0.9),
-									(float) (1 - nsmooth * 0.5));
+									(float) (1 - nsmooth * 0.5));*/
+							}
 							break;
 						}
+					smoothColor = smoothColor / getIterations();
 					}
-					juliaImage.setRGB(x, y, color.getRGB());
+					//juliaImage.setRGB(x, y, color.getRGB());
 				}
 			}
+
+		@Override
+		public void componentResized(ComponentEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void componentMoved(ComponentEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void componentShown(ComponentEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void componentHidden(ComponentEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
 
 		}
 
