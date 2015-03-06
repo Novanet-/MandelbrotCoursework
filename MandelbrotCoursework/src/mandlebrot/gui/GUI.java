@@ -386,6 +386,8 @@ public class GUI extends JFrame
 					yAxisComplex);
 
 			//pnlJulia.repaint();
+			//conversionRatio = Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex);
+			pnlJulia.juliaImage = new BufferedImage(getWidth(), getHeight(), paintType);
 			JuliaThread juliaThread = new JuliaThread();
 			juliaThread.start();
 		}
@@ -435,6 +437,14 @@ public class GUI extends JFrame
 				//conversionRatio = Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), xAxisComplex, yAxisComplex);
 				//juliaImage = new BufferedImage(getWidth(), getHeight(), paintType);
 				//paintJuliaSet();
+				try
+				{
+					juliaThread.join(2000);
+				} catch (InterruptedException e)
+				{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				g2.drawImage(juliaImage, 0, 0, null);
 				// lastDrawTime = System.currentTimeMillis() / 1000;
 			}
@@ -593,6 +603,7 @@ public class GUI extends JFrame
 					pnlJulia.juliaImage.setRGB(x, y, Color.HSBtoRGB((float) (0.95f + 10 * smoothColor), 0.6f, 1.0f));
 				}
 			}
+			this.stop();
 
 		}
 
