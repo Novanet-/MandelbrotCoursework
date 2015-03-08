@@ -52,6 +52,8 @@ public class GUI extends JFrame
 	private final int PAINT_TYPE = BufferedImage.TYPE_INT_ARGB;
 	private final static File IMAGE_DIRECTORY = new File(System.getProperty("user.dir") + "/images/");
 
+	private long lastDrawTime = 0;
+
 	private GUI frame;
 	private JPanel pnlOuter;
 	private JPanel pnlFractal;
@@ -60,32 +62,31 @@ public class GUI extends JFrame
 	private InfoPanel pnlInfo;
 
 	private Pair<Double, Double> xAxisComplex;
-	
+
+
 	public Pair<Double, Double> getxAxisComplex()
 	{
 		return xAxisComplex;
 	}
 
 
-	
 	public void setxAxisComplex(Pair<Double, Double> xAxisComplex)
 	{
 		this.xAxisComplex = xAxisComplex;
 	}
 
 
-	
 	public Pair<Double, Double> getyAxisComplex()
 	{
 		return yAxisComplex;
 	}
 
 
-	
 	public void setyAxisComplex(Pair<Double, Double> yAxisComplex)
 	{
 		this.yAxisComplex = yAxisComplex;
 	}
+
 
 	private Pair<Double, Double> yAxisComplex;
 	private int iterations;
@@ -418,8 +419,8 @@ public class GUI extends JFrame
 			System.out.println("Click");
 
 			getClickLocationRing().add(new Point(e.getX(), e.getY()));
-			setComplexCoordinate(Maths.convertCoordinateToComplexPlane(getClickLocationRing().get(0), getConversionRatio(), getWidth(), getHeight(),
-					getxAxisComplex(), getyAxisComplex()));
+			setComplexCoordinate(Maths.convertCoordinateToComplexPlane(getClickLocationRing().get(0), getConversionRatio(), getWidth(),
+					getHeight(), getxAxisComplex(), getyAxisComplex()));
 			DecimalFormat df = new DecimalFormat("#.##");
 
 			String connector;
@@ -561,8 +562,13 @@ public class GUI extends JFrame
 		@Override
 		public void mouseMoved(MouseEvent e)
 		{
-			getClickLocationRing().add(new Point(e.getX(), e.getY()));
-			setJuliaNeedsRecalculate(true);
+			if ((System.currentTimeMillis()/1000) - (lastDrawTime/1000) > 1)
+			{
+				System.out.println("Move");
+				getClickLocationRing().add(new Point(e.getX(), e.getY()));
+				setJuliaNeedsRecalculate(true);
+				lastDrawTime = System.currentTimeMillis();
+			}
 		}
 
 
@@ -592,14 +598,12 @@ public class GUI extends JFrame
 		}
 
 
-		
 		public CircularArrayRing<Point> getClickLocationRing()
 		{
 			return clickLocationRing;
 		}
 
 
-		
 		public void setClickLocationRing(CircularArrayRing<Point> clickLocationRing)
 		{
 			this.clickLocationRing = clickLocationRing;
@@ -629,7 +633,6 @@ public class GUI extends JFrame
 			this.mandelbrotImage = mandelbrotImage;
 		}
 
-
 	}
 
 	class JuliaPanel extends JPanel implements MouseListener, ComponentListener
@@ -652,6 +655,7 @@ public class GUI extends JFrame
 
 		public void init()
 		{
+			juliaImageRing = new CircularArrayRing<BufferedImage>();
 			getPnlJulia().setBackground(Color.GRAY);
 			getPnlJulia().setPreferredSize(new Dimension((int) (getPnlFractal().getWidth() * (0.4)), (int) (getPnlFractal().getHeight())));
 			setJuliaImage(new BufferedImage((int) (getPnlFractal().getWidth() * (0.4)), getPnlFractal().getHeight(), getPAINT_TYPE()));
