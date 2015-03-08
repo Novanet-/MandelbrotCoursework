@@ -4,6 +4,11 @@ import java.util.AbstractCollection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/**
+ * @author Will
+ *
+ * @param <E>
+ */
 public class CircularArrayRing<E> extends AbstractCollection<E> implements Ring<E>
 {
 	private E[] queue;
@@ -42,21 +47,13 @@ public class CircularArrayRing<E> extends AbstractCollection<E> implements Ring<
 		return true;
 	}
 
+	
+	/**
+	 * Fetches the element contained at the specified index of the ring
+	 */
 	@Override
-	public E get(int index) throws IndexOutOfBoundsException // Takes the
-																// element at
-	// the head of the queue
-	// out of the scope of
-	// the array,
-	// effectively deleting
-	// it
+	public E get(int index) throws IndexOutOfBoundsException
 	{
-		/*
-		 * if (!isEmpty()) { int elementRemoved = queue[head]; queue[head] = 0;
-		 * if (head == queue.length - 1) head = 0; else ++head; return
-		 * elementRemoved; } else throw new NoSuchElementException();
-		 */
-
 		if (index >= size() || index > getQueue().length || index < 0)
 			throw new IndexOutOfBoundsException();
 		if (index + 1 <= getTail())
@@ -127,12 +124,12 @@ public class CircularArrayRing<E> extends AbstractCollection<E> implements Ring<
 		return it;
 	}
 
-	public int getHead()
+	private int getHead()
 	{
 		return head;
 	}
 
-	public void setHead(int head)
+	private void setHead(int head)
 	{
 		this.head = head;
 	}

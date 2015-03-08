@@ -33,11 +33,11 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import mandelbrot.maths.ComplexNumber;
 import mandelbrot.maths.Maths;
 import utilities.Pair;
-
 import circularRing.CircularArrayRing;
 
 public class GUI extends JFrame
@@ -46,8 +46,8 @@ public class GUI extends JFrame
 	private static Rectangle screenBounds = GUI.getScreenResolution();
 	private final static int DEFAULT_FRAME_WIDTH = (int) (screenBounds.getWidth() * 0.95);
 	private final static int DEFAULT_FRAME_HEIGHT = (int) (screenBounds.getHeight() * 0.75);
-	private final static Pair<Double, Double> DEFAULT_Y_AXIS_COMPLEX = new Pair<Double, Double>(-2.0, 2.0);
-	private final static Pair<Double, Double> DEFAULT_X_AXIS_COMPLEX = new Pair<Double, Double>(-1.6, 1.6);
+	private final static Pair<Double, Double> DEFAULT_X_AXIS_COMPLEX = new Pair<Double, Double>(-2.0, 2.0);
+	private final static Pair<Double, Double> DEFAULT_Y_AXIS_COMPLEX = new Pair<Double, Double>(-1.6, 1.6);
 	private final static int DEFAULT_ITERATIONS = 100;
 	private final int PAINT_TYPE = BufferedImage.TYPE_INT_ARGB;
 	private final static File IMAGE_DIRECTORY = new File(System.getProperty("user.dir") + "/images/");
@@ -60,6 +60,33 @@ public class GUI extends JFrame
 	private InfoPanel pnlInfo;
 
 	private Pair<Double, Double> xAxisComplex;
+	
+	public Pair<Double, Double> getxAxisComplex()
+	{
+		return xAxisComplex;
+	}
+
+
+	
+	public void setxAxisComplex(Pair<Double, Double> xAxisComplex)
+	{
+		this.xAxisComplex = xAxisComplex;
+	}
+
+
+	
+	public Pair<Double, Double> getyAxisComplex()
+	{
+		return yAxisComplex;
+	}
+
+
+	
+	public void setyAxisComplex(Pair<Double, Double> yAxisComplex)
+	{
+		this.yAxisComplex = yAxisComplex;
+	}
+
 	private Pair<Double, Double> yAxisComplex;
 	private int iterations;
 	private ComplexNumber complexCoordinate;
@@ -89,14 +116,17 @@ public class GUI extends JFrame
 		frame.setResizable(true);
 		frame.setMinimumSize(new Dimension(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT));
 
-		frame.setXAxisComplex(DEFAULT_Y_AXIS_COMPLEX);
-		frame.setYAxisComplex(DEFAULT_X_AXIS_COMPLEX);
+		frame.setxAxisComplex(DEFAULT_X_AXIS_COMPLEX);
+		frame.setyAxisComplex(DEFAULT_Y_AXIS_COMPLEX);
 		frame.setIterations(DEFAULT_ITERATIONS);
 
 		frame.init();
 	}
 
 
+	/**
+	 * Initialises the various components contained in the frame by calling the child components initialisation methods
+	 */
 	public void init()
 	{
 		setTitle("Mandelbrot Visualiser");
@@ -125,24 +155,17 @@ public class GUI extends JFrame
 	}
 
 
+	/**
+	 * Fetches the screen resolution of the primary monitor
+	 * 
+	 * @return virtualBounds A rectangle with bounds matching that of the primary monitor the program is running in
+	 */
 	public static Rectangle getScreenResolution()
 	{
 		Rectangle virtualBounds = new Rectangle();
 		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 		virtualBounds.setBounds(0, 0, gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
 		return virtualBounds;
-	}
-
-
-	public Pair<Double, Double> getXPairComplex()
-	{
-		return getxAxisComplex();
-	}
-
-
-	public Pair<Double, Double> getYPairComplex()
-	{
-		return getyAxisComplex();
 	}
 
 
@@ -158,45 +181,9 @@ public class GUI extends JFrame
 	}
 
 
-	public void setXAxisComplex(Pair<Double, Double> xPairComplex)
-	{
-		this.setxAxisComplex(xPairComplex);
-	}
-
-
-	public void setYAxisComplex(Pair<Double, Double> yPairComplex)
-	{
-		this.setyAxisComplex(yPairComplex);
-	}
-
-
 	public void setIterations(int iterations)
 	{
 		this.iterations = iterations;
-	}
-
-
-	private Pair<Double, Double> getxAxisComplex()
-	{
-		return xAxisComplex;
-	}
-
-
-	private void setxAxisComplex(Pair<Double, Double> xAxisComplex)
-	{
-		this.xAxisComplex = xAxisComplex;
-	}
-
-
-	private Pair<Double, Double> getyAxisComplex()
-	{
-		return yAxisComplex;
-	}
-
-
-	private void setyAxisComplex(Pair<Double, Double> yAxisComplex)
-	{
-		this.yAxisComplex = yAxisComplex;
 	}
 
 
@@ -215,18 +202,6 @@ public class GUI extends JFrame
 	public void setJuliaNeedsRecalculate(boolean juliaNeedsRecalculate)
 	{
 		this.juliaNeedsRecalculate = juliaNeedsRecalculate;
-	}
-
-
-	private GUI getFrame()
-	{
-		return frame;
-	}
-
-
-	private void setFrame(GUI frame)
-	{
-		this.frame = frame;
 	}
 
 
@@ -299,7 +274,7 @@ public class GUI extends JFrame
 	class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener, MouseMotionListener, KeyListener
 	{
 
-		private Point clickLocation;
+		private CircularArrayRing<Point> clickLocationRing;
 		private Point pressLocation;
 		private Point releaseLocation;
 		private BufferedImage mandelbrotImage;
@@ -311,6 +286,9 @@ public class GUI extends JFrame
 		private static final long serialVersionUID = 1900295689838487856L;
 
 
+		/**
+		 * Sets the paint type of the mandelbrot image and adds various Event Listeners to the panel
+		 */
 		public MandelbrotPanel()
 		{
 			super();
@@ -321,8 +299,13 @@ public class GUI extends JFrame
 		}
 
 
+		/**
+		 * Sets the preferred size of the panel and calculates the conversion ratio from it's resoultion to the complex
+		 * plane
+		 */
 		public void init()
 		{
+			clickLocationRing = new CircularArrayRing<Point>();
 			getPnlMandelbrot().setBackground(Color.GRAY);
 			getPnlMandelbrot().setPreferredSize(new Dimension((int) (getPnlFractal().getWidth() * (0.6)), (int) (getPnlFractal().getHeight())));
 			setMandelbrotImage(new BufferedImage((int) (getPnlFractal().getWidth() * (0.6)), getPnlFractal().getHeight(), paintType));
@@ -331,6 +314,12 @@ public class GUI extends JFrame
 		}
 
 
+		/**
+		 * Draws a selection rectangle if the mouse is being dragged, otherwise calculates and draws the mandelbrot set
+		 * 
+		 * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+		 */
+		@Override
 		public void paintComponent(Graphics g)
 		{
 			Graphics2D g2 = (Graphics2D) g;
@@ -356,6 +345,10 @@ public class GUI extends JFrame
 		}
 
 
+		/**
+		 * Iterates through all the pixels of the panel, converting each one to a complex coordinate and using that to
+		 * generate a colour which will make up part of the mandelbrot image
+		 */
 		public void paintMandelbrotSet()
 		{
 			int width = getWidth();
@@ -379,8 +372,14 @@ public class GUI extends JFrame
 		}
 
 
+		/**
+		 * @param complexCoordinate
+		 *            The complex version of the current pixel of the mandelbrot panel
+		 * @return <b>color</b/> The calculated colour of the pixel at the passed coordinate of the mandelbrot image
+		 */
 		public int generateColor(ComplexNumber complexCoordinate)
 		{
+			// Sets the default colour to black, if the number does not diverge, the pixel will be black
 			int color = Color.BLACK.getRGB();
 			float nsmooth = 0;
 			ComplexNumber z = complexCoordinate;
@@ -389,8 +388,16 @@ public class GUI extends JFrame
 				z = z.square().add(complexCoordinate);
 				if (z.modulusSquared() > 4)
 				{
+					// A function to decide the colour of the pixel, based on how many iterations it took for the
+					// complex number to diverge, if at all
+					// Generates a float between [0, maxIterations]
 					nsmooth = (float) (i + 1 - Math.log(Math.log(z.modulusSquared())) / Math.log(2));
+
+					// Converts the float to a number between [0,1]
 					nsmooth = nsmooth / getIterations();
+
+					// Uses the float value as part of the value for the hue of the pixel, and converts it to an RGB
+					// representation of the colour
 					color = Color.HSBtoRGB(0.95f + 10 * nsmooth, 0.6f, 1.0f);
 					break;
 				}
@@ -399,37 +406,42 @@ public class GUI extends JFrame
 		}
 
 
+		/**
+		 * Prints the complex version of the coordinate clicked to a label in the info panel
+		 * 
+		 * @see java.awt.event.MouseListener#mouseClicked(java.awt.event.MouseEvent)
+		 */
 		@Override
 		public void mouseClicked(MouseEvent e)
 		{
-			if (e.getButton() == MouseEvent.BUTTON1)
+			getPnlMandelbrot().requestFocusInWindow();
+			System.out.println("Click");
+
+			getClickLocationRing().add(new Point(e.getX(), e.getY()));
+			setComplexCoordinate(Maths.convertCoordinateToComplexPlane(getClickLocationRing().get(0), getConversionRatio(), getWidth(), getHeight(),
+					getxAxisComplex(), getyAxisComplex()));
+			DecimalFormat df = new DecimalFormat("#.##");
+
+			String connector;
+
+			if (getComplexCoordinate().getImaginary() < 0)
 			{
-				getPnlMandelbrot().requestFocusInWindow();
-				System.out.println("Click");
-
-				setClickLocation(new Point(e.getX(), e.getY()));
-				setComplexCoordinate(Maths.convertCoordinateToComplexPlane(getClickLocation(), getConversionRatio(), getWidth(), getHeight(),
-						getxAxisComplex(), getyAxisComplex()));
-				DecimalFormat df = new DecimalFormat("#.##");
-
-				String connector;
-
-				if (getComplexCoordinate().getImaginary() < 0)
-				{
-					connector = " - ";
-					getComplexCoordinate().setImaginary(Math.abs(getComplexCoordinate().getImaginary()));
-				}
-				else
-					connector = " + ";
-				getPnlInfo().getLblSelectedComplexPoint().setText(
-						("Selected point: " + "z = " + df.format(getComplexCoordinate().getReal()) + connector
-								+ df.format(getComplexCoordinate().getImaginary()) + "i"));
-
-				getPnlJulia().repaint();
+				connector = " - ";
+				getComplexCoordinate().setImaginary(Math.abs(getComplexCoordinate().getImaginary()));
 			}
+			else
+				connector = " + ";
+			getPnlInfo().getLblSelectedComplexPoint().setText(
+					("Selected point: " + "z = " + df.format(getComplexCoordinate().getReal()) + connector
+							+ df.format(getComplexCoordinate().getImaginary()) + "i"));
 		}
 
 
+		/**
+		 * Starts the drawing of a selection rectangle, used for zooming in on the mandelbrot set
+		 *
+		 * @see java.awt.event.MouseListener#mousePressed(java.awt.event.MouseEvent)
+		 */
 		@Override
 		public void mousePressed(MouseEvent e)
 		{
@@ -441,6 +453,12 @@ public class GUI extends JFrame
 		}
 
 
+		/**
+		 * Gets the coordinates of the edges of the selection rectangle, and uses them to calculate new complex axes for
+		 * zooming in on the mandelbrot set
+		 * 
+		 * @see java.awt.event.MouseListener#mouseReleased(java.awt.event.MouseEvent)
+		 */
 		@Override
 		public void mouseReleased(MouseEvent e)
 		{
@@ -495,6 +513,12 @@ public class GUI extends JFrame
 		}
 
 
+		/**
+		 * Recalculates the conversion ratio for converting from panel coordinates to complex coordinates, whenever the
+		 * panel is resized
+		 * 
+		 * @see java.awt.event.ComponentListener#componentResized(java.awt.event.ComponentEvent)
+		 */
 		@Override
 		public void componentResized(ComponentEvent e)
 		{
@@ -508,24 +532,36 @@ public class GUI extends JFrame
 		}
 
 
+		/**
+		 * Draws the selection rectangle from where the mouse was first pressed, to the current position of the cursor
+		 * 
+		 * @see java.awt.event.MouseMotionListener#mouseDragged(java.awt.event.MouseEvent)
+		 */
 		@Override
 		public void mouseDragged(MouseEvent e)
 		{
+			if (e.getButton() == MouseEvent.BUTTON1)
+			{
+				int x = (int) Math.min(pressLocation.x, e.getX());
+				int y = (int) Math.min(pressLocation.y, e.getY());
+				int width = (int) Math.abs(pressLocation.getX() - e.getX());
+				int height = (int) Math.abs(pressLocation.getY() - e.getY());
 
-			int x = (int) Math.min(pressLocation.x, e.getX());
-			int y = (int) Math.min(pressLocation.y, e.getY());
-			int width = (int) Math.abs(pressLocation.getX() - e.getX());
-			int height = (int) Math.abs(pressLocation.getY() - e.getY());
-
-			selection.setBounds(x, y, width, height);
-			repaint();
+				selection.setBounds(x, y, width, height);
+				repaint();
+			}
 		}
 
 
+		/**
+		 * When the mouse is moved within Notifies the julia set calculation thread
+		 * 
+		 * @see java.awt.event.MouseMotionListener#mouseMoved(java.awt.event.MouseEvent)
+		 */
 		@Override
 		public void mouseMoved(MouseEvent e)
 		{
-			setClickLocation(new Point(e.getX(), e.getY()));
+			getClickLocationRing().add(new Point(e.getX(), e.getY()));
 			setJuliaNeedsRecalculate(true);
 		}
 
@@ -556,6 +592,20 @@ public class GUI extends JFrame
 		}
 
 
+		
+		public CircularArrayRing<Point> getClickLocationRing()
+		{
+			return clickLocationRing;
+		}
+
+
+		
+		public void setClickLocationRing(CircularArrayRing<Point> clickLocationRing)
+		{
+			this.clickLocationRing = clickLocationRing;
+		}
+
+
 		Pair<Double, Double> getConversionRatio()
 		{
 			return conversionRatio;
@@ -580,16 +630,6 @@ public class GUI extends JFrame
 		}
 
 
-		Point getClickLocation()
-		{
-			return clickLocation;
-		}
-
-
-		void setClickLocation(Point clickLocation)
-		{
-			this.clickLocation = clickLocation;
-		}
 	}
 
 	class JuliaPanel extends JPanel implements MouseListener, ComponentListener
@@ -626,20 +666,20 @@ public class GUI extends JFrame
 
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-			super.paintComponent(g2);
-
 			setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), getxAxisComplex(), getyAxisComplex()));
 
 			if (favouriteSelected)
 			{
+				super.paintComponent(g2);
 				g2.drawImage(getJuliaImage(), 0, 0, null);
 				favouriteSelected = false;
 			}
 			else
 			{
-				if (getComplexCoordinate() != null)
+				if ((getComplexCoordinate() != null) && (!getJuliaImageRing().isEmpty()))
 				{
-					g2.drawImage(getJuliaImage(), 0, 0, null);
+					super.paintComponent(g2);
+					g2.drawImage(getJuliaImageRing().get(0), 0, 0, null);
 					getPnlMandelbrot().requestFocusInWindow();
 				}
 			}
@@ -812,6 +852,12 @@ public class GUI extends JFrame
 			this.conversionRatio = conversionRatio;
 		}
 
+
+		private CircularArrayRing<BufferedImage> getJuliaImageRing()
+		{
+			return juliaImageRing;
+		}
+
 	}
 
 	class InfoPanel extends JPanel implements ActionListener
@@ -940,8 +986,8 @@ public class GUI extends JFrame
 		{
 			if (e.getSource() == btnChangeAxis)
 			{
-				setXAxisComplex(new Pair<Double, Double>(Double.parseDouble(txtRealLower.getText()), Double.parseDouble(txtRealUpper.getText())));
-				setYAxisComplex(new Pair<Double, Double>(Double.parseDouble(txtImaginaryLower.getText()), Double.parseDouble(txtImaginaryUpper
+				setxAxisComplex(new Pair<Double, Double>(Double.parseDouble(txtRealLower.getText()), Double.parseDouble(txtRealUpper.getText())));
+				setyAxisComplex(new Pair<Double, Double>(Double.parseDouble(txtImaginaryLower.getText()), Double.parseDouble(txtImaginaryUpper
 						.getText())));
 			}
 			else if (e.getSource() == btnSubmitIterations)
@@ -996,10 +1042,11 @@ public class GUI extends JFrame
 			{
 				if (isJuliaNeedsRecalculate())
 				{
-					setComplexCoordinate(Maths.convertCoordinateToComplexPlane(getPnlMandelbrot().getClickLocation(), getPnlJulia()
+					setComplexCoordinate(Maths.convertCoordinateToComplexPlane(getPnlMandelbrot().getClickLocationRing().get(0), getPnlJulia()
 							.getConversionRatio(), getWidth(), getHeight(), getxAxisComplex(), getyAxisComplex()));
 					getPnlJulia().setJuliaImage(new BufferedImage(getWidth(), getHeight(), getPAINT_TYPE()));
 					getPnlJulia().paintJuliaSet();
+					getPnlJulia().getJuliaImageRing().add(pnlJulia.getJuliaImage());
 					setJuliaNeedsRecalculate(false);
 					getPnlJulia().repaint();
 				}
