@@ -120,6 +120,7 @@ public class GUI extends JFrame
 		frame.setxAxisComplex(DEFAULT_X_AXIS_COMPLEX);
 		frame.setyAxisComplex(DEFAULT_Y_AXIS_COMPLEX);
 		frame.setIterations(DEFAULT_ITERATIONS);
+		frame.setResizable(false);
 
 		frame.init();
 	}
@@ -194,13 +195,13 @@ public class GUI extends JFrame
 	}
 
 
-	private boolean isJuliaNeedsRecalculate()
+	private synchronized boolean isJuliaNeedsRecalculate()
 	{
 		return juliaNeedsRecalculate;
 	}
 
 
-	public void setJuliaNeedsRecalculate(boolean juliaNeedsRecalculate)
+	public synchronized void setJuliaNeedsRecalculate(boolean juliaNeedsRecalculate)
 	{
 		this.juliaNeedsRecalculate = juliaNeedsRecalculate;
 	}
@@ -309,9 +310,9 @@ public class GUI extends JFrame
 			cursorLocationRing = new CircularArrayRing<Point>();
 			getPnlMandelbrot().setBackground(Color.GRAY);
 			getPnlMandelbrot().setPreferredSize(new Dimension((int) (getPnlFractal().getWidth() * (0.6)), (int) (getPnlFractal().getHeight())));
-			setMandelbrotImage(new BufferedImage((int) (getPnlFractal().getWidth() * (0.6)), getPnlFractal().getHeight(), paintType));
 			setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), getxAxisComplex(), getyAxisComplex()));
 			getPnlFractal().add(getPnlMandelbrot());
+			setMandelbrotImage(new BufferedImage((int) (getPnlMandelbrot().getPreferredSize().getWidth()), (int) getPnlMandelbrot().getPreferredSize().getHeight(), paintType));
 		}
 
 
@@ -332,7 +333,7 @@ public class GUI extends JFrame
 			setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), getxAxisComplex(), getyAxisComplex()));
 			if (selection == null)
 			{
-				setMandelbrotImage(new BufferedImage(getWidth(), getHeight(), paintType));
+				setMandelbrotImage(new BufferedImage((int) (getPnlMandelbrot().getPreferredSize().getWidth()), (int) getPnlMandelbrot().getPreferredSize().getHeight(), paintType));
 				paintMandelbrotSet();
 				g2.drawImage(getMandelbrotImage(), 0, 0, null);
 			}
@@ -399,7 +400,7 @@ public class GUI extends JFrame
 
 					// Uses the float value as part of the value for the hue of the pixel, and converts it to an RGB
 					// representation of the colour
-					color = Color.HSBtoRGB(0.95f + 10 * nsmooth, 0.6f, 1.0f);
+					color = Color.HSBtoRGB(0.65f + 5 * nsmooth, 0.6f, 1.0f);
 					break;
 				}
 			}
@@ -448,6 +449,7 @@ public class GUI extends JFrame
 		{
 			if (e.getButton() == MouseEvent.BUTTON1)
 			{
+				System.out.println("Press");
 				pressLocation = new Point(e.getX(), e.getY());
 				selection = new Rectangle(pressLocation);
 			}
@@ -467,7 +469,8 @@ public class GUI extends JFrame
 			int height = getHeight();
 
 			if (e.getButton() == MouseEvent.BUTTON1)
-			{
+			{	
+				System.out.println("Release");
 				releaseLocation = new Point(e.getX(), e.getY());
 
 				int xLower = (int) selection.getMinX();
@@ -541,8 +544,9 @@ public class GUI extends JFrame
 		@Override
 		public void mouseDragged(MouseEvent e)
 		{
-			if (e.getButton() == MouseEvent.BUTTON1)
-			{
+			//if (e.getButton() == MouseEvent.BUTTON1)
+			//{
+				System.out.println("Drag");
 				int x = (int) Math.min(pressLocation.x, e.getX());
 				int y = (int) Math.min(pressLocation.y, e.getY());
 				int width = (int) Math.abs(pressLocation.getX() - e.getX());
@@ -550,7 +554,7 @@ public class GUI extends JFrame
 
 				selection.setBounds(x, y, width, height);
 				repaint();
-			}
+			//}
 		}
 
 
@@ -562,13 +566,13 @@ public class GUI extends JFrame
 		@Override
 		public void mouseMoved(MouseEvent e)
 		{
-			if ((System.currentTimeMillis() / 1000) - (lastDrawTime / 1000) > 1)
-			{
+//			if ((System.currentTimeMillis() / 1000) - (lastDrawTime / 1000) > 1)
+//			{
 				System.out.println("Move");
 				getCursorLocationRing().add(new Point(e.getX(), e.getY()));
 				setJuliaNeedsRecalculate(true);
 				lastDrawTime = System.currentTimeMillis();
-			}
+//			}
 		}
 
 
@@ -640,7 +644,7 @@ public class GUI extends JFrame
 
 		private Point clickLocation;
 		private BufferedImage juliaImage;
-		private CircularArrayRing<BufferedImage> juliaImageRing; // A ring of the 10 most recent Julia images, the most
+		private BufferedImage juliaImageRing; // A ring of the 10 most recent Julia images, the most
 																	// recent is at index 0
 		private Pair<Double, Double> conversionRatio;
 
@@ -660,7 +664,7 @@ public class GUI extends JFrame
 		 */
 		public void init()
 		{
-			juliaImageRing = new CircularArrayRing<BufferedImage>();
+//			juliaImageRing = new CircularArrayRing<BufferedImage>();
 
 			getPnlJulia().setBackground(Color.GRAY);
 			getPnlJulia().setPreferredSize(new Dimension((int) (getPnlFractal().getWidth() * (0.4)), (int) (getPnlFractal().getHeight())));
@@ -694,12 +698,12 @@ public class GUI extends JFrame
 			}
 			else
 			{
-				if ((getComplexCoordinate() != null) && (!getJuliaImageRing().isEmpty()))
+				if ((getComplexCoordinate() != null) && (getJuliaImageRing() != null))
 				{
 					super.paintComponent(g2);
-					
+										
 					//Fetches and draws the most recently calculated Julia image
-					g2.drawImage(getJuliaImageRing().get(0), 0, 0, null);
+					g2.drawImage(getJuliaImageRing(), 0, 0, null);
 					
 					getPnlMandelbrot().requestFocusInWindow();
 				}
@@ -712,29 +716,34 @@ public class GUI extends JFrame
 		 * Iterates through each pixel in the Julia panel, converting each coordinate into a complex number and then
 		 * determining the colour that pixel should be to draw a Julia set
 		 */
-		public void paintJuliaSet()
+		public BufferedImage paintJuliaSet()
 		{
 			int width = getWidth();
 			int height = getHeight();
+			BufferedImage tempImage;
 			ComplexNumber iteratingCoordinate;
 
-			for (int x = 0; x < getPnlJulia().getJuliaImage().getWidth(); x++)
+			tempImage = new BufferedImage(getWidth(), getHeight(), PAINT_TYPE);
+			
+			for (int x = 0; x < getPnlJulia().getWidth(); x++)
 			{
-				for (int y = 0; y < getPnlJulia().getJuliaImage().getHeight(); y++)
+				for (int y = 0; y < getPnlJulia().getHeight(); y++)
 				{
 					iteratingCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), getConversionRatio(), width, height,
 							DEFAULT_X_AXIS_COMPLEX, DEFAULT_Y_AXIS_COMPLEX);
 
-					getPnlJulia().getJuliaImage().setRGB(x, y, generateColor(iteratingCoordinate));
+					tempImage.setRGB(x, y, generateColor(iteratingCoordinate));
 				}
 			}
+			
+			return tempImage;
 
 		}
 
 
 		/**
-		 * Determines the colour for a given pixel in the julia set by adding a negative expontential number to a float
-		 * value each time an tieration is run, until the complex number diverges
+		 * Determines the colour for a given pixel in the julia set by adding a negative exponential number to a float
+		 * value each time an iteration is run, until the complex number diverges
 		 * 
 		 * @param z
 		 *            The current complex coordinate for drawing the Julia set
@@ -745,9 +754,6 @@ public class GUI extends JFrame
 			double smoothColor;
 			int color;
 			int maxIterations = getIterations();
-			ComplexNumber complexCoordinate;
-
-			complexCoordinate = getComplexCoordinate();
 			color = Color.BLACK.getRGB();
 
 			smoothColor = Math.exp(-(z.modulusSquared())); // e ^ -(abs(z))
@@ -896,7 +902,7 @@ public class GUI extends JFrame
 		}
 
 
-		private CircularArrayRing<BufferedImage> getJuliaImageRing()
+		private BufferedImage getJuliaImageRing()
 		{
 			return juliaImageRing;
 		}
@@ -939,10 +945,10 @@ public class GUI extends JFrame
 			 * (ParseException e) { System.err.println(e.getMessage()); e.printStackTrace(); }
 			 */
 
-			txtRealLower = new JFormattedTextField(new Double(DEFAULT_Y_AXIS_COMPLEX.getLeft()));
-			txtRealUpper = new JFormattedTextField(new Double(DEFAULT_Y_AXIS_COMPLEX.getRight()));
-			txtImaginaryLower = new JFormattedTextField(new Double(DEFAULT_X_AXIS_COMPLEX.getLeft()));
-			txtImaginaryUpper = new JFormattedTextField(new Double(DEFAULT_X_AXIS_COMPLEX.getRight()));
+			txtRealLower = new JFormattedTextField(new Double(DEFAULT_X_AXIS_COMPLEX.getLeft()));
+			txtRealUpper = new JFormattedTextField(new Double(DEFAULT_X_AXIS_COMPLEX.getRight()));
+			txtImaginaryLower = new JFormattedTextField(new Double(DEFAULT_Y_AXIS_COMPLEX.getLeft()));
+			txtImaginaryUpper = new JFormattedTextField(new Double(DEFAULT_Y_AXIS_COMPLEX.getRight()));
 			btnChangeAxis = new JButton("Submit New Axis");
 			txtIterations = new JFormattedTextField(Integer.valueOf(DEFAULT_ITERATIONS));
 			btnSubmitIterations = new JButton("Submit Iteration Amount");
@@ -1079,6 +1085,11 @@ public class GUI extends JFrame
 	public class JuliaThread extends Thread
 	{
 
+		public JuliaThread()
+		{
+			this.setPriority(Thread.MAX_PRIORITY);
+		}
+		
 		/**
 		 * Constantly iterates, checking if the flag that the Julia set needs a recalculate is set to true, if true,
 		 * then recalculate the Julia set
@@ -1091,21 +1102,21 @@ public class GUI extends JFrame
 			{
 				if (isJuliaNeedsRecalculate())
 				{
+					// Sets a flag indicating that the Julia calculation is over
+					setJuliaNeedsRecalculate(false);
+					
 					// Sets the complex coordinate used for Julia set calculations to the last position of the cursor in
 					// the Mandelbrot panel
 					setComplexCoordinate(Maths.convertCoordinateToComplexPlane(getPnlMandelbrot().getCursorLocationRing().get(0), getPnlJulia()
 							.getConversionRatio(), getWidth(), getHeight(), getxAxisComplex(), getyAxisComplex()));
 
-					getPnlJulia().setJuliaImage(new BufferedImage(getWidth(), getHeight(), getPAINT_TYPE()));
+					//getPnlJulia().setJuliaImage(new BufferedImage(getWidth(), getHeight(), getPAINT_TYPE()));
 
 					// Generates a Julia set image with the complex coordinate that was set
-					getPnlJulia().paintJuliaSet();
+					BufferedImage tempImage = getPnlJulia().paintJuliaSet();
 
 					// Adds the Julia image just created to a ring, where the most recent image is at index is 0
-					getPnlJulia().getJuliaImageRing().add(pnlJulia.getJuliaImage());
-
-					// Sets a flag indicating that the Julia calculation is over
-					setJuliaNeedsRecalculate(false);
+					getPnlJulia().juliaImageRing = tempImage;
 					
 					//Tells the Swing thread to repaint the Julia panel
 					getPnlJulia().repaint();
