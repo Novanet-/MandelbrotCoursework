@@ -275,7 +275,7 @@ public class GUI extends JFrame
 	class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener, MouseMotionListener, KeyListener
 	{
 
-		private CircularArrayRing<Point> clickLocationRing;
+		private CircularArrayRing<Point> cursorLocationRing;
 		private Point pressLocation;
 		private Point releaseLocation;
 		private BufferedImage mandelbrotImage;
@@ -306,7 +306,7 @@ public class GUI extends JFrame
 		 */
 		public void init()
 		{
-			clickLocationRing = new CircularArrayRing<Point>();
+			cursorLocationRing = new CircularArrayRing<Point>();
 			getPnlMandelbrot().setBackground(Color.GRAY);
 			getPnlMandelbrot().setPreferredSize(new Dimension((int) (getPnlFractal().getWidth() * (0.6)), (int) (getPnlFractal().getHeight())));
 			setMandelbrotImage(new BufferedImage((int) (getPnlFractal().getWidth() * (0.6)), getPnlFractal().getHeight(), paintType));
@@ -418,8 +418,8 @@ public class GUI extends JFrame
 			getPnlMandelbrot().requestFocusInWindow();
 			System.out.println("Click");
 
-			getClickLocationRing().add(new Point(e.getX(), e.getY()));
-			setComplexCoordinate(Maths.convertCoordinateToComplexPlane(getClickLocationRing().get(0), getConversionRatio(), getWidth(),
+			getCursorLocationRing().add(new Point(e.getX(), e.getY()));
+			setComplexCoordinate(Maths.convertCoordinateToComplexPlane(getCursorLocationRing().get(0), getConversionRatio(), getWidth(),
 					getHeight(), getxAxisComplex(), getyAxisComplex()));
 			DecimalFormat df = new DecimalFormat("#.##");
 
@@ -562,10 +562,10 @@ public class GUI extends JFrame
 		@Override
 		public void mouseMoved(MouseEvent e)
 		{
-			if ((System.currentTimeMillis()/1000) - (lastDrawTime/1000) > 1)
+			if ((System.currentTimeMillis() / 1000) - (lastDrawTime / 1000) > 1)
 			{
 				System.out.println("Move");
-				getClickLocationRing().add(new Point(e.getX(), e.getY()));
+				getCursorLocationRing().add(new Point(e.getX(), e.getY()));
 				setJuliaNeedsRecalculate(true);
 				lastDrawTime = System.currentTimeMillis();
 			}
@@ -598,15 +598,15 @@ public class GUI extends JFrame
 		}
 
 
-		public CircularArrayRing<Point> getClickLocationRing()
+		public CircularArrayRing<Point> getCursorLocationRing()
 		{
-			return clickLocationRing;
+			return cursorLocationRing;
 		}
 
 
-		public void setClickLocationRing(CircularArrayRing<Point> clickLocationRing)
+		public void setCursorLocationRing(CircularArrayRing<Point> cursorLocationRing)
 		{
-			this.clickLocationRing = clickLocationRing;
+			this.cursorLocationRing = cursorLocationRing;
 		}
 
 
@@ -638,9 +638,10 @@ public class GUI extends JFrame
 	class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 	{
 
-		Point clickLocation;
+		private Point clickLocation;
 		private BufferedImage juliaImage;
-		private CircularArrayRing<BufferedImage> juliaImageRing;
+		private CircularArrayRing<BufferedImage> juliaImageRing; // A ring of the 10 most recent Julia images, the most
+																	// recent is at index 0
 		private Pair<Double, Double> conversionRatio;
 
 		private static final long serialVersionUID = 1900295689838487856L;
@@ -653,17 +654,30 @@ public class GUI extends JFrame
 		}
 
 
+		/**
+		 * Sets the preferred size of the panel, and calculates the conversion ratio from the panel bounds to the
+		 * complex bounds
+		 */
 		public void init()
 		{
 			juliaImageRing = new CircularArrayRing<BufferedImage>();
+
 			getPnlJulia().setBackground(Color.GRAY);
 			getPnlJulia().setPreferredSize(new Dimension((int) (getPnlFractal().getWidth() * (0.4)), (int) (getPnlFractal().getHeight())));
+
 			setJuliaImage(new BufferedImage((int) (getPnlFractal().getWidth() * (0.4)), getPnlFractal().getHeight(), getPAINT_TYPE()));
 			setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), getxAxisComplex(), getyAxisComplex()));
+
 			getPnlFractal().add(getPnlJulia());
 		}
 
 
+		/**
+		 * If one of the saved Julia images is selected, then the selected image is drawn in the julia panel, otherwise
+		 * it draws the most recent calculated julia image
+		 * 
+		 * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+		 */
 		public void paintComponent(Graphics g)
 		{
 			Graphics2D g2 = (Graphics2D) g;
@@ -683,7 +697,10 @@ public class GUI extends JFrame
 				if ((getComplexCoordinate() != null) && (!getJuliaImageRing().isEmpty()))
 				{
 					super.paintComponent(g2);
+					
+					//Fetches and draws the most recently calculated Julia image
 					g2.drawImage(getJuliaImageRing().get(0), 0, 0, null);
+					
 					getPnlMandelbrot().requestFocusInWindow();
 				}
 			}
@@ -691,6 +708,10 @@ public class GUI extends JFrame
 		}
 
 
+		/**
+		 * Iterates through each pixel in the Julia panel, converting each coordinate into a complex number and then
+		 * determining the colour that pixel should be to draw a Julia set
+		 */
 		public void paintJuliaSet()
 		{
 			int width = getWidth();
@@ -703,6 +724,7 @@ public class GUI extends JFrame
 				{
 					iteratingCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), getConversionRatio(), width, height,
 							DEFAULT_X_AXIS_COMPLEX, DEFAULT_Y_AXIS_COMPLEX);
+
 					getPnlJulia().getJuliaImage().setRGB(x, y, generateColor(iteratingCoordinate));
 				}
 			}
@@ -710,6 +732,14 @@ public class GUI extends JFrame
 		}
 
 
+		/**
+		 * Determines the colour for a given pixel in the julia set by adding a negative expontential number to a float
+		 * value each time an tieration is run, until the complex number diverges
+		 * 
+		 * @param z
+		 *            The current complex coordinate for drawing the Julia set
+		 * @return <b>color</b> THE RGB value that the current pixel should be set to
+		 */
 		private int generateColor(ComplexNumber z)
 		{
 			double smoothColor;
@@ -719,16 +749,25 @@ public class GUI extends JFrame
 
 			complexCoordinate = getComplexCoordinate();
 			color = Color.BLACK.getRGB();
-			smoothColor = Math.exp(-(z.modulusSquared()));
+
+			smoothColor = Math.exp(-(z.modulusSquared())); // e ^ -(abs(z))
+
 			for (int i = 0; i < maxIterations; i++)
 			{
 				z = z.square().add(complexCoordinate);
+
+				// Increments the colour value by this amount for each iteration until the number diverges
 				smoothColor += Math.exp(-z.modulusSquared());
+
 				if (z.modulusSquared() > 4)
 				{
+					// Changes the range of smoothColor from [0, maxIterations] to [0, 1]
 					smoothColor = smoothColor / maxIterations;
+
+					// Uses the float value as part of the value for the hue of the pixel, and converts it to an RGB
+					// representation of the colour
 					color = Color.HSBtoRGB((float) (0.55f + 10 * smoothColor), 0.6f, 1.0f);
-					color = new Color(color).getRGB();
+
 					break;
 				}
 			}
@@ -1040,18 +1079,35 @@ public class GUI extends JFrame
 	public class JuliaThread extends Thread
 	{
 
+		/**
+		 * Constantly iterates, checking if the flag that the Julia set needs a recalculate is set to true, if true,
+		 * then recalculate the Julia set
+		 * 
+		 * @see java.lang.Thread#run()
+		 */
 		public void run()
 		{
 			while (true)
 			{
 				if (isJuliaNeedsRecalculate())
 				{
-					setComplexCoordinate(Maths.convertCoordinateToComplexPlane(getPnlMandelbrot().getClickLocationRing().get(0), getPnlJulia()
+					// Sets the complex coordinate used for Julia set calculations to the last position of the cursor in
+					// the Mandelbrot panel
+					setComplexCoordinate(Maths.convertCoordinateToComplexPlane(getPnlMandelbrot().getCursorLocationRing().get(0), getPnlJulia()
 							.getConversionRatio(), getWidth(), getHeight(), getxAxisComplex(), getyAxisComplex()));
+
 					getPnlJulia().setJuliaImage(new BufferedImage(getWidth(), getHeight(), getPAINT_TYPE()));
+
+					// Generates a Julia set image with the complex coordinate that was set
 					getPnlJulia().paintJuliaSet();
+
+					// Adds the Julia image just created to a ring, where the most recent image is at index is 0
 					getPnlJulia().getJuliaImageRing().add(pnlJulia.getJuliaImage());
+
+					// Sets a flag indicating that the Julia calculation is over
 					setJuliaNeedsRecalculate(false);
+					
+					//Tells the Swing thread to repaint the Julia panel
 					getPnlJulia().repaint();
 				}
 			}
