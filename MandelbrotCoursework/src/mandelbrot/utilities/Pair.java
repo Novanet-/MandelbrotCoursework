@@ -1,4 +1,4 @@
-package utilities;
+package mandelbrot.utilities;
 
 public class Pair<L, R>
 {

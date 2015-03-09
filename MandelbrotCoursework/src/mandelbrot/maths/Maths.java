@@ -2,7 +2,7 @@ package mandelbrot.maths;
 
 import java.awt.Point;
 
-import utilities.Pair;
+import mandelbrot.utilities.Pair;
 
 public final class Maths
 {
