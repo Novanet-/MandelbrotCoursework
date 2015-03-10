@@ -18,6 +18,7 @@ import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import mandelbrot.maths.ComplexNumber;
 import mandelbrot.maths.Maths;
@@ -43,7 +44,9 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 
 	/**
 	 * Sets the paint type of the mandelbrot image and adds various Event Listeners to the panel
-	 * @param gui TODO
+	 * 
+	 * @param gui
+	 *            TODO
 	 */
 	public MandelbrotPanel(GUI gui)
 	{
@@ -63,7 +66,8 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 	public void init()
 	{
 		gui.getPnlMandelbrot().setBackground(Color.GRAY);
-		gui.getPnlMandelbrot().setPreferredSize(new Dimension((int) (gui.getPnlFractal().getWidth() * (0.6)), (int) (gui.getPnlFractal().getHeight())));
+		gui.getPnlMandelbrot().setPreferredSize(
+				new Dimension((int) (gui.getPnlFractal().getWidth() * (0.6)), (int) (gui.getPnlFractal().getHeight())));
 		setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), gui.getxAxisComplex(), gui.getyAxisComplex()));
 		gui.getPnlFractal().add(gui.getPnlMandelbrot());
 		setMandelbrotImage(new BufferedImage((int) (gui.getPnlMandelbrot().getPreferredSize().getWidth()), (int) gui.getPnlMandelbrot()
@@ -89,7 +93,7 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 		if (selection == null)
 		{
 			gui.setMandelbrotNeedsRecalculate(true);
-			//paintMandelbrotSet();
+			// paintMandelbrotSet();
 			g2.drawImage(getMandelbrotImage(), 0, 0, null);
 		}
 		else
@@ -118,7 +122,7 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 		ComplexNumber complexCoordinate;
 
 		tempImage = new BufferedImage(width, height, gui.PAINT_TYPE);
-		
+
 		for (int x = 0; x < width; x++)
 		{
 			for (int y = 0; y < height; y++)
@@ -128,7 +132,7 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 				tempImage.setRGB(x, y, generateColor(complexCoordinate));
 			}
 		}
-		
+
 		return tempImage;
 
 	}
@@ -193,14 +197,16 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 		}
 		else
 			connector = " + ";
-		gui.getPnlInfo().getLblSelectedComplexPoint().setText(
-				("Selected point: " + "z = " + df.format(gui.getComplexCoordinate().getReal()) + connector
-						+ df.format(gui.getComplexCoordinate().getImaginary()) + "i"));
+		gui.getPnlInfo()
+				.getLblSelectedComplexPoint()
+				.setText(
+						("Selected point: " + "z = " + df.format(gui.getComplexCoordinate().getReal()) + connector
+								+ df.format(gui.getComplexCoordinate().getImaginary()) + "i"));
 	}
 
 
 	/**
-	 * Starts the drawing of a selection rectangle, used for zooming in on the mandelbrot set
+	 * Starts the drawing of a selection rectangle, used for zooming in on the Mandelbrot set
 	 *
 	 * @see java.awt.event.MouseListener#mousePressed(java.awt.event.MouseEvent)
 	 */
@@ -238,10 +244,10 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 			int yLower = (int) selection.getMinY();
 			int yUpper = (int) selection.getMaxY();
 
-			ComplexNumber lowerComplex = Maths.convertCoordinateToComplexPlane(new Point(xLower, yLower), getConversionRatio(), width,
-					height, gui.getxAxisComplex(), gui.getyAxisComplex());
-			ComplexNumber upperComplex = Maths.convertCoordinateToComplexPlane(new Point(xUpper, yUpper), getConversionRatio(), width,
-					height, gui.getxAxisComplex(), gui.getyAxisComplex());
+			ComplexNumber lowerComplex = Maths.convertCoordinateToComplexPlane(new Point(xLower, yLower), getConversionRatio(), width, height,
+					gui.getxAxisComplex(), gui.getyAxisComplex());
+			ComplexNumber upperComplex = Maths.convertCoordinateToComplexPlane(new Point(xUpper, yUpper), getConversionRatio(), width, height,
+					gui.getxAxisComplex(), gui.getyAxisComplex());
 
 			gui.setxAxisComplex(new Pair<Double, Double>(lowerComplex.getReal(), upperComplex.getReal()));
 			gui.setyAxisComplex(new Pair<Double, Double>(lowerComplex.getImaginary(), upperComplex.getImaginary()));
@@ -303,17 +309,17 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 	@Override
 	public void mouseDragged(MouseEvent e)
 	{
-		// if (e.getButton() == MouseEvent.BUTTON1)
-		// {
-		System.out.println("Drag");
-		int x = (int) Math.min(pressLocation.x, e.getX());
-		int y = (int) Math.min(pressLocation.y, e.getY());
-		int width = (int) Math.abs(pressLocation.getX() - e.getX());
-		int height = (int) Math.abs(pressLocation.getY() - e.getY());
+		if (SwingUtilities.isLeftMouseButton(e))
+		{
+			System.out.println("Drag");
+			int x = (int) Math.min(pressLocation.x, e.getX());
+			int y = (int) Math.min(pressLocation.y, e.getY());
+			int width = (int) Math.abs(pressLocation.getX() - e.getX());
+			int height = (int) Math.abs(pressLocation.getY() - e.getY());
 
-		selection.setBounds(x, y, width, height);
-		repaint();
-		// }
+			selection.setBounds(x, y, width, height);
+			repaint();
+		}
 	}
 
 
@@ -325,13 +331,9 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 	@Override
 	public void mouseMoved(MouseEvent e)
 	{
-		// if ((System.currentTimeMillis() / 1000) - (lastDrawTime / 1000) > 1)
-		// {
 		System.out.println("Move");
 		setCursorLocation(new Point(e.getX(), e.getY()));
 		gui.setJuliaNeedsRecalculate(true);
-		gui.lastDrawTime = System.currentTimeMillis();
-		// }
 	}
 
 

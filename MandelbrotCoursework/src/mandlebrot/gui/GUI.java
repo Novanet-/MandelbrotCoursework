@@ -26,7 +26,6 @@ public class GUI extends JFrame
 	final int PAINT_TYPE = BufferedImage.TYPE_INT_ARGB;
 	final static File IMAGE_DIRECTORY = new File(System.getProperty("user.dir") + "/images/");
 
-	long lastDrawTime = 0;
 
 	@SuppressWarnings("unused")
 	private GUI frame;
@@ -39,7 +38,7 @@ public class GUI extends JFrame
 	private Pair<Double, Double> xAxisComplex;
 	private Pair<Double, Double> yAxisComplex;
 	private int iterations;
-	ComplexNumber complexCoordinate;
+	private ComplexNumber complexCoordinate;
 
 	boolean favouriteSelected = false;
 

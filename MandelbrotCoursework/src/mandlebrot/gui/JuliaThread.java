@@ -7,9 +7,6 @@ import mandelbrot.maths.Maths;
 public class JuliaThread extends Thread
 {
 
-	/**
-	 * 
-	 */
 	private GUI gui;
 
 
@@ -37,8 +34,8 @@ public class JuliaThread extends Thread
 
 				// Sets the complex coordinate used for Julia set calculations to the last position of the cursor in
 				// the Mandelbrot panel
-				gui.setComplexCoordinate(Maths.convertCoordinateToComplexPlane(gui.getPnlMandelbrot().getCursorLocation(), gui.getPnlJulia()
-						.getConversionRatio(), gui.getWidth(), gui.getHeight(), gui.getxAxisComplex(), gui.getyAxisComplex()));
+				gui.setComplexCoordinate(Maths.convertCoordinateToComplexPlane(gui.getPnlMandelbrot().getCursorLocation(), gui.getPnlMandelbrot()
+						.getConversionRatio(), gui.getPnlMandelbrot().getWidth(), gui.getPnlMandelbrot().getHeight(), gui.getxAxisComplex(), gui.getyAxisComplex()));
 
 				// getPnlJulia().setJuliaImage(new BufferedImage(getWidth(), getHeight(), getPAINT_TYPE()));
 
@@ -46,7 +43,7 @@ public class JuliaThread extends Thread
 				BufferedImage tempImage = gui.getPnlJulia().paintJuliaSet();
 
 				// Adds the Julia image just created to a ring, where the most recent image is at index is 0
-				gui.getPnlJulia().juliaImage = tempImage;
+				gui.getPnlJulia().setJuliaImage(tempImage);
 
 				// Tells the Swing thread to repaint the Julia panel
 				gui.getPnlJulia().repaint();

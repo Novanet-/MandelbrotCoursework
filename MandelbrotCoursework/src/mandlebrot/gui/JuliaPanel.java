@@ -29,7 +29,7 @@ class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 	 */
 	private GUI gui;
 	private BufferedImage juliaSavedImage;
-	BufferedImage juliaImage; // A ring of the 10 most recent Julia images, the most
+	private BufferedImage juliaImage; // A ring of the 10 most recent Julia images, the most
 										// recent is at index 0
 	private Pair<Double, Double> conversionRatio;
 
@@ -84,12 +84,12 @@ class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 		}
 		else
 		{
-			if ((gui.getComplexCoordinate() != null) && (getJuliaImageRing() != null))
+			if ((gui.getComplexCoordinate() != null) && (getJuliaImage() != null))
 			{
 				super.paintComponent(g2);
 
 				// Fetches and draws the most recently calculated Julia image
-				g2.drawImage(getJuliaImageRing(), 0, 0, null);
+				g2.drawImage(getJuliaImage(), 0, 0, null);
 
 				gui.getPnlMandelbrot().requestFocusInWindow();
 			}
@@ -109,11 +109,11 @@ class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 		BufferedImage tempImage;
 		ComplexNumber iteratingCoordinate;
 
-		tempImage = new BufferedImage(getWidth(), getHeight(), gui.PAINT_TYPE);
+		tempImage = new BufferedImage(width, height, gui.PAINT_TYPE);
 
-		for (int x = 0; x < gui.getPnlJulia().getWidth(); x++)
+		for (int x = 0; x < width; x++)
 		{
-			for (int y = 0; y < gui.getPnlJulia().getHeight(); y++)
+			for (int y = 0; y < height; y++)
 			{
 				iteratingCoordinate = Maths.convertCoordinateToComplexPlane(new Point(x, y), getConversionRatio(), width, height,
 						GUI.DEFAULT_X_AXIS_COMPLEX, GUI.DEFAULT_Y_AXIS_COMPLEX);
@@ -146,7 +146,7 @@ class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 
 		for (int i = 0; i < maxIterations; i++)
 		{
-			z = z.square().add(gui.complexCoordinate);
+			z = z.square().add(gui.getComplexCoordinate());
 
 			// Increments the colour value by this amount for each iteration until the number diverges
 			smoothColor += Math.exp(-z.modulusSquared());
@@ -182,7 +182,7 @@ class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 			else
 				noOfFiles = 0;
 			File outputFile = new File(GUI.IMAGE_DIRECTORY + "/julia" + (noOfFiles + 1) + ".png");
-			ImageIO.write(getJuliaImage(), "png", outputFile);
+			ImageIO.write(getJuliaSavedImage(), "png", outputFile);
 		}
 		catch (IOException e)
 		{
@@ -264,13 +264,13 @@ class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 	}
 
 
-	BufferedImage getJuliaImage()
+	BufferedImage getJuliaSavedImage()
 	{
 		return juliaSavedImage;
 	}
 
 
-	void setJuliaImage(BufferedImage juliaImage)
+	void setJuliaSavedImage(BufferedImage juliaImage)
 	{
 		this.juliaSavedImage = juliaImage;
 	}
@@ -288,9 +288,16 @@ class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 	}
 
 
-	private BufferedImage getJuliaImageRing()
+	private BufferedImage getJuliaImage()
 	{
 		return juliaImage;
 	}
+
+
+	void setJuliaImage(BufferedImage juliaImage)
+	{
+		this.juliaImage = juliaImage;
+	}
+
 
 }
