@@ -1,5 +1,6 @@
 package mandelbrot.gui;
 
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -196,7 +197,8 @@ class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 				noOfFiles = 0;
 			File outputFile = new File(GUI.IMAGE_DIRECTORY + "/julia" + (noOfFiles + 1) + ".png");
 			ImageIO.write(getJuliaImage(), "png", outputFile);
-			gui.getPnlInfo().populateImageList();
+			gui.getPnlInfo().getCmbJuliaFavourites().addItem(outputFile.getName());
+			//gui.getPnlInfo().populateImageList();
 		}
 		catch (IOException e)
 		{

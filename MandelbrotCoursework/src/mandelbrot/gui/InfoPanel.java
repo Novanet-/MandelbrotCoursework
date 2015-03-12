@@ -1,5 +1,6 @@
 package mandelbrot.gui;
 
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -9,8 +10,12 @@ import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 import javax.imageio.ImageIO;
 import javax.swing.Box;
@@ -83,8 +88,8 @@ class InfoPanel extends JPanel implements ActionListener
 
 		populateImageList();
 
-		cmbJuliaFavourites.setSelectedItem(null);
-		cmbJuliaFavourites.addActionListener(new ComboBoxListener());
+		getCmbJuliaFavourites().setSelectedItem(null);
+		getCmbJuliaFavourites().addActionListener(new ComboBoxListener());
 
 		txtRealLower.setMargin(new Insets(5, 5, 5, 5));
 		txtRealUpper.setMargin(new Insets(5, 5, 5, 5));
@@ -133,7 +138,7 @@ class InfoPanel extends JPanel implements ActionListener
 		gui.getPnlInfo().add(Box.createHorizontalGlue());
 		gui.getPnlInfo().add(lblSelectedComplexPoint);
 		gui.getPnlInfo().add(Box.createHorizontalGlue());
-		gui.getPnlInfo().add(cmbJuliaFavourites);
+		gui.getPnlInfo().add(getCmbJuliaFavourites());
 		gui.getPnlInfo().add(Box.createHorizontalGlue());
 		gui.getPnlInfo().add(new JLabel("Press P to save a Julia Image"));
 		gui.getPnlInfo().add(Box.createHorizontalGlue());
@@ -146,13 +151,31 @@ class InfoPanel extends JPanel implements ActionListener
 
 	void populateImageList()
 	{
+		FilenameFilter pngFilter = new FilenameFilter()
+		{
+			public boolean accept(File dir, String name)
+			{
+				String lowercaseName = name.toLowerCase();
+				if (lowercaseName.endsWith(".png"))
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+		};
 		if (GUI.IMAGE_DIRECTORY.list() != null)
 		{
-			String[] imageList = GUI.IMAGE_DIRECTORY.list();
-			cmbJuliaFavourites = new JComboBox<String>(imageList);
+			String[] imageArray = GUI.IMAGE_DIRECTORY.list(pngFilter);
+			ArrayList<String> imageList = new ArrayList<String>(Arrays.asList(imageArray));
+			Collections.sort(imageList);
+			imageArray = imageList.toArray(new String[imageList.size()]);
+			setCmbJuliaFavourites(new JComboBox<String>(imageArray));
 		}
 		else
-			cmbJuliaFavourites = new JComboBox<String>();
+			setCmbJuliaFavourites(new JComboBox<String>());
 	}
 
 	@Override
@@ -168,7 +191,7 @@ class InfoPanel extends JPanel implements ActionListener
 	public void updateBounds(Pair<Double, Double> xAxisComplex, Pair<Double, Double> yAxisComplex)
 	{
 		DecimalFormat dF = new DecimalFormat("#.##");
-		
+
 		txtRealLower.setText(dF.format(xAxisComplex.getLeft()));
 		txtRealUpper.setText(dF.format(xAxisComplex.getRight()));
 		txtImaginaryLower.setText(dF.format(yAxisComplex.getLeft()));
@@ -179,7 +202,6 @@ class InfoPanel extends JPanel implements ActionListener
 	{
 		txtIterations.setText(String.valueOf(iterations));
 	}
-	
 
 	@Override
 	public void actionPerformed(ActionEvent e)
@@ -214,6 +236,16 @@ class InfoPanel extends JPanel implements ActionListener
 		this.lblSelectedComplexPoint = lblSelectedComplexPoint;
 	}
 
+	public JComboBox<String> getCmbJuliaFavourites()
+	{
+		return cmbJuliaFavourites;
+	}
+
+	public void setCmbJuliaFavourites(JComboBox<String> cmbJuliaFavourites)
+	{
+		this.cmbJuliaFavourites = cmbJuliaFavourites;
+	}
+
 	class ComboBoxListener implements ActionListener
 	{
 
@@ -223,7 +255,7 @@ class InfoPanel extends JPanel implements ActionListener
 			try
 			{
 				File fileSelected = new File(GUI.IMAGE_DIRECTORY + "/"
-						+ cmbJuliaFavourites.getItemAt(cmbJuliaFavourites.getSelectedIndex()));
+						+ getCmbJuliaFavourites().getItemAt(getCmbJuliaFavourites().getSelectedIndex()));
 				gui.getPnlJulia().setJuliaImage(ImageIO.read(fileSelected));
 				gui.favouriteSelected = true;
 				gui.getPnlJulia().repaint();
