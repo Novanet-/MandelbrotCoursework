@@ -56,7 +56,7 @@ class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 		gui.getPnlJulia().setPreferredSize(new Dimension((int) (gui.getPnlFractal().getWidth() * (0.4)), (int) (gui.getPnlFractal().getHeight())));
 
 		setJuliaImage(new BufferedImage((int) (gui.getPnlFractal().getWidth() * (0.4)), gui.getPnlFractal().getHeight(), gui.getPAINT_TYPE()));
-		setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), gui.getxAxisComplex(), gui.getyAxisComplex()));
+		setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), GUI.DEFAULT_X_AXIS_COMPLEX, GUI.DEFAULT_Y_AXIS_COMPLEX));
 
 		gui.getPnlFractal().add(gui.getPnlJulia());
 	}
@@ -74,7 +74,7 @@ class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), gui.getxAxisComplex(), gui.getyAxisComplex()));
+		setConversionRatio(Maths.calculateRealtoComplexRatio(getWidth(), getHeight(), GUI.DEFAULT_X_AXIS_COMPLEX, GUI.DEFAULT_X_AXIS_COMPLEX));
 
 		if (gui.favouriteSelected)
 		{

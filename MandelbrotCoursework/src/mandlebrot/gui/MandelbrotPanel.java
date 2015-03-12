@@ -101,7 +101,6 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 			g2.drawImage(getMandelbrotImage(), 0, 0, null);
 			g2.draw(selection);
 		}
-		gui.getPnlMandelbrot().requestFocusInWindow();
 
 	}
 
@@ -251,6 +250,8 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 
 			gui.setxAxisComplex(new Pair<Double, Double>(lowerComplex.getReal(), upperComplex.getReal()));
 			gui.setyAxisComplex(new Pair<Double, Double>(lowerComplex.getImaginary(), upperComplex.getImaginary()));
+			
+			gui.getPnlInfo().updateBounds(gui.getxAxisComplex(), gui.getyAxisComplex());
 
 			selection = null;
 			gui.getPnlMandelbrot().repaint();
@@ -340,9 +341,9 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 	@Override
 	public void keyPressed(KeyEvent e)
 	{
-		System.out.println("Print");
 		if (e.getKeyCode() == KeyEvent.VK_P)
 		{
+			System.out.println("Print");
 			gui.getPnlJulia().saveJuliaImage();
 		}
 
