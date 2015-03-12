@@ -1,4 +1,4 @@
-package mandlebrot.gui;
+package mandelbrot.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -81,13 +81,7 @@ class InfoPanel extends JPanel implements ActionListener
 		btnSubmitIterations = new JButton("Submit Iteration Amount");
 		btnRestoreDefault = new JButton("Restore Defaults");
 
-		if (GUI.IMAGE_DIRECTORY.list() != null)
-		{
-			String[] imageList = GUI.IMAGE_DIRECTORY.list();
-			cmbJuliaFavourites = new JComboBox<String>(imageList);
-		}
-		else
-			cmbJuliaFavourites = new JComboBox<String>();
+		populateImageList();
 
 		cmbJuliaFavourites.setSelectedItem(null);
 		cmbJuliaFavourites.addActionListener(new ComboBoxListener());
@@ -150,6 +144,17 @@ class InfoPanel extends JPanel implements ActionListener
 		gui.getPnlOuter().add(gui.getPnlInfo());
 	}
 
+	void populateImageList()
+	{
+		if (GUI.IMAGE_DIRECTORY.list() != null)
+		{
+			String[] imageList = GUI.IMAGE_DIRECTORY.list();
+			cmbJuliaFavourites = new JComboBox<String>(imageList);
+		}
+		else
+			cmbJuliaFavourites = new JComboBox<String>();
+	}
+
 	@Override
 	public void paintComponent(Graphics g)
 	{
@@ -174,6 +179,7 @@ class InfoPanel extends JPanel implements ActionListener
 	{
 		txtIterations.setText(String.valueOf(iterations));
 	}
+	
 
 	@Override
 	public void actionPerformed(ActionEvent e)

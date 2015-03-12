@@ -1,4 +1,4 @@
-package mandlebrot.gui;
+package mandelbrot.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -332,7 +332,7 @@ class MandelbrotPanel extends JPanel implements MouseListener, ComponentListener
 	@Override
 	public void mouseMoved(MouseEvent e)
 	{
-		System.out.println("Move");
+		//System.out.println("Move");
 		setCursorLocation(new Point(e.getX(), e.getY()));
 		gui.setJuliaNeedsRecalculate(true);
 	}

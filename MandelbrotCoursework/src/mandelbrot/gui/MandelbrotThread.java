@@ -1,4 +1,4 @@
-package mandlebrot.gui;
+package mandelbrot.gui;
 
 import java.awt.image.BufferedImage;
 

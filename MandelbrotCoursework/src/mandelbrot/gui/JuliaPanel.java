@@ -1,4 +1,4 @@
-package mandlebrot.gui;
+package mandelbrot.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -12,6 +12,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
@@ -177,12 +178,25 @@ class JuliaPanel extends JPanel implements MouseListener, ComponentListener
 				GUI.IMAGE_DIRECTORY.mkdir();
 			}
 			int noOfFiles;
+			
+			FilenameFilter pngFilter = new FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					String lowercaseName = name.toLowerCase();
+					if (lowercaseName.endsWith(".png")) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			};
+			
 			if (GUI.IMAGE_DIRECTORY.list() != null)
-				noOfFiles = GUI.IMAGE_DIRECTORY.list().length;
+				noOfFiles = GUI.IMAGE_DIRECTORY.listFiles(pngFilter).length;
 			else
 				noOfFiles = 0;
 			File outputFile = new File(GUI.IMAGE_DIRECTORY + "/julia" + (noOfFiles + 1) + ".png");
-			ImageIO.write(getJuliaSavedImage(), "png", outputFile);
+			ImageIO.write(getJuliaImage(), "png", outputFile);
+			gui.getPnlInfo().populateImageList();
 		}
 		catch (IOException e)
 		{
