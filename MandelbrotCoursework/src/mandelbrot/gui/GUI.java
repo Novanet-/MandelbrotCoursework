@@ -21,7 +21,7 @@ public class GUI extends JFrame
 	final static int DEFAULT_FRAME_WIDTH = (int) (screenBounds.getWidth() * 0.95);
 	final static int DEFAULT_FRAME_HEIGHT = (int) (screenBounds.getHeight() * 0.75);
 	final static Pair<Double, Double> DEFAULT_X_AXIS_COMPLEX = new Pair<Double, Double>(-2.0, 2.0);
-	final static Pair<Double, Double> DEFAULT_Y_AXIS_COMPLEX = new Pair<Double, Double>(-1.6, 1.6);
+	final static Pair<Double, Double> DEFAULT_Y_AXIS_COMPLEX = new Pair<Double, Double>(-1.6, 1.6); 
 	final static int DEFAULT_ITERATIONS = 100;
 	final int PAINT_TYPE = BufferedImage.TYPE_INT_ARGB;
 	final static File IMAGE_DIRECTORY = new File(System.getProperty("user.dir") + "/images/");
